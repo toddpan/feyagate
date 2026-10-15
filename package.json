@@ -1,6 +1,6 @@
 {
   "name": "feyagate",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "FeyaGate smart-home skill + MCP server for AI agents (Claude Code, Cursor, Codex, DSH…): control Xiaomi, Tuya, Midea, eWeLink and Huawei devices. Installs and upgrades a verified local engine.",
   "type": "module",
   "bin": {

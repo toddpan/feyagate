@@ -1,7 +1,7 @@
 ---
 name: feyagate
 description: Control a real smart home from the AI agent through the local FeyaGate MCP engine. Use when the user asks to turn devices on or off, set brightness, temperature or AC mode, check device status, view a camera, make a XiaoAI speaker talk, create schedules or automations, or log in to Xiaomi (Mi Home / 米家), Tuya (Smart Life / 涂鸦), Midea (美的), eWeLink / Sonoff or Huawei (华为智慧生活). Also use when the user asks to install, upgrade, repair or roll back FeyaGate.
-version: 2.0.0
+version: 2.0.1
 author: panzuji
 homepage: https://www.feyagate.com
 license: MIT
