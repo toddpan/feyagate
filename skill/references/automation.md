@@ -28,7 +28,7 @@
 {
   "name": "schedule/add",
   "arguments": {
-    "name": "睡前关灯",
+    "name": "Turn off lights at bedtime",
     "scheduled_time": "2026-05-16T23:00:00+08:00",
     "tool_name": "set_xiaomi_device_property",
     "tool_args": "{\"deviceId\":\"xxx\",\"siid\":2,\"piid\":1,\"value\":false}",
@@ -58,14 +58,14 @@ Trigger rules monitor Xiaomi camera frames and auto-execute MCP tool calls when 
 }
 ```
 
-**Example — "有人进门开灯":**
+**Example — "Turn on the light when someone comes in":**
 ```json
 {
   "name": "trigger/create",
   "arguments": {
-    "name": "玄关感应开灯",
+    "name": "Motion light at the entryway",
     "cameras": ["CAMERA_DID"],
-    "condition": "有人进入玄关",
+    "condition": "Someone enters the entryway",
     "actions": [
       {
         "tool": "set_xiaomi_device_property",

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for working in this repo (branch `feat/npm-skill`: Node/TypeScript rewrite, npm package `feyagate`).
+Guidance for working in this repo (npm package `feyagate`, Node/TypeScript).
 
 ## What this repo is
 

@@ -1,106 +1,106 @@
-# FeyaGate HTTP API 文档
+# FeyaGate HTTP API Documentation
 
-> **适用产品**: miloco-mcp-server (桌面版虚拟网关 / ESP32 物理网关)
-> **基础 URL**: `http://<网关IP>:<port>` (桌面版默认 `38080`)
-> **协议**: HTTP REST + MCP JSON-RPC 2.0
-> **CORS**: 全局开放 `Access-Control-Allow-Origin: *`
+> **Applicable products**: miloco-mcp-server (desktop virtual gateway / ESP32 physical gateway)
+> **Base URL**: `http://<gateway-IP>:<port>` (desktop default `38080`)
+> **Protocol**: HTTP REST + MCP JSON-RPC 2.0
+> **CORS**: open globally, `Access-Control-Allow-Origin: *`
 
 ---
 
-## 目录
+## Table of Contents
 
-- [1. 概述](#1-概述)
-- [2. HTTP REST 接口](#2-http-rest-接口)
-  - [2.1 健康检查](#21-健康检查)
-  - [2.2 OAuth 授权回调](#22-oauth-授权回调)
-  - [2.3 网关信息](#23-网关信息)
-  - [2.4 授权管理](#24-授权管理)
-- [3. MCP JSON-RPC 接口](#3-mcp-json-rpc-接口)
-  - [3.1 协议说明](#31-协议说明)
-  - [3.2 协议方法](#32-协议方法)
-- [4. 米家平台](#4-米家平台)
-- [5. 小爱音箱](#5-小爱音箱)
-- [6. 小智平台](#6-小智平台)
-- [7. 授权与网关](#7-授权与网关)
+- [1. Overview](#1-overview)
+- [2. HTTP REST Endpoints](#2-http-rest-endpoints)
+  - [2.1 Health Check](#21-health-check)
+  - [2.2 OAuth Authorization Callback](#22-oauth-authorization-callback)
+  - [2.3 Gateway Info](#23-gateway-info)
+  - [2.4 License Management](#24-license-management)
+- [3. MCP JSON-RPC Endpoints](#3-mcp-json-rpc-endpoints)
+  - [3.1 Protocol Description](#31-protocol-description)
+  - [3.2 Protocol Methods](#32-protocol-methods)
+- [4. 米家 (Mi Home) Platform](#4-米家-mi-home-platform)
+- [5. 小爱音箱 (Xiaoai Speaker)](#5-小爱音箱-xiaoai-speaker)
+- [6. 小智 (Xiaozhi) Platform](#6-小智-xiaozhi-platform)
+- [7. License and Gateway](#7-license-and-gateway)
 - [8. Vision AI](#8-vision-ai)
-- [9. 触发规则](#9-触发规则)
-- [10. 配置管理](#10-配置管理)
-- [11. 统计数据](#11-统计数据)
-- [12. 多平台设备](#12-多平台设备)
-- [13. 定时任务](#13-定时任务)
-- [14. 技能管理](#14-技能管理)
+- [9. Trigger Rules](#9-trigger-rules)
+- [10. Configuration Management](#10-configuration-management)
+- [11. Statistics](#11-statistics)
+- [12. Multi-platform Devices](#12-multi-platform-devices)
+- [13. Scheduled Tasks](#13-scheduled-tasks)
+- [14. Skill Management](#14-skill-management)
 
 ---
 
-## 1. 概述
+## 1. Overview
 
-FeyaGate 网关提供两类 HTTP 接口：
+The FeyaGate gateway provides two kinds of HTTP endpoints:
 
-1. **HTTP REST 接口** — 标准 GET/POST/DELETE 端点，主要用于健康检查、OAuth 授权回调、网关信息和授权管理。
-2. **MCP JSON-RPC 接口** — 所有智能家居控制、设备管理等核心功能通过 `POST /mcp/http` 以 JSON-RPC 2.0 协议调用。
+1. **HTTP REST endpoints** — standard GET/POST/DELETE endpoints, used mainly for health checks, the OAuth authorization callback, gateway info, and license management.
+2. **MCP JSON-RPC endpoints** — all core features such as smart home control and device management are invoked over the JSON-RPC 2.0 protocol through `POST /mcp/http`.
 
 ---
 
-## 2. HTTP REST 接口
+## 2. HTTP REST Endpoints
 
-### 2.1 健康检查
+### 2.1 Health Check
 
 ```
 GET /health
 ```
 
-**响应示例**:
+**Response example**:
 ```json
 {"status": "ok"}
 ```
 
-### 2.2 OAuth 授权回调
+### 2.2 OAuth Authorization Callback
 
-#### 2.2.1 OAuth 回调
+#### 2.2.1 OAuth Callback
 
 ```
 GET /auth/callback?code=xxx&source=browser
 ```
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `code` | string | 是 | OAuth 授权码 |
-| `source` | string | 否 | 来源标识，`browser` 时触发页面重定向 |
+| `code` | string | Yes | OAuth authorization code |
+| `source` | string | No | Source identifier; when `browser`, a page redirect is triggered |
 
-**响应**: 成功时返回 HTML 页面显示授权结果；失败时返回错误提示。
+**Response**: On success, returns an HTML page showing the authorization result; on failure, returns an error message.
 
-#### 2.2.2 浏览器 OAuth 回调
+#### 2.2.2 Browser OAuth Callback
 
 ```
 GET /auth/browser-callback?code=xxx
 ```
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `code` | string | 是 | OAuth 授权码 |
+| `code` | string | Yes | OAuth authorization code |
 
-**响应**: 重定向到 `/#/?auth=success` 或 `/#/?auth=failed`。
+**Response**: Redirects to `/#/?auth=success` or `/#/?auth=failed`.
 
-#### 2.2.3 浏览器 OAuth 启动页
+#### 2.2.3 Browser OAuth Start Page
 
 ```
 GET /auth/browser-start?oauth_url=xxx&callback=xxx
 ```
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `oauth_url` | string | 是 | OAuth 授权 URL |
-| `callback` | string | 是 | 回调地址 |
+| `oauth_url` | string | Yes | OAuth authorization URL |
+| `callback` | string | Yes | Callback address |
 
-**响应**: 返回 HTML 页面，含小米登录按钮，500ms 后自动跳转授权。
+**Response**: Returns an HTML page containing a Xiaomi login button that automatically redirects to the authorization page after 500ms.
 
-### 2.3 网关信息
+### 2.3 Gateway Info
 
 ```
 GET /api/v1/gateway/info
 ```
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "code": 0,
@@ -114,15 +114,15 @@ GET /api/v1/gateway/info
 }
 ```
 
-### 2.4 授权管理
+### 2.4 License Management
 
-#### 获取授权状态
+#### Get License Status
 
 ```
 GET /api/v1/gateway/license
 ```
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "code": 0,
@@ -135,14 +135,14 @@ GET /api/v1/gateway/license
 }
 ```
 
-#### 写入授权码
+#### Write License Key
 
 ```
 POST /api/v1/gateway/license
 Content-Type: application/json
 ```
 
-**请求体**:
+**Request body**:
 ```json
 {
   "license_key": "FG-XXXX-XXXX-XXXX",
@@ -150,12 +150,12 @@ Content-Type: application/json
 }
 ```
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `license_key` | string | 是 | 授权码，格式 `FG-XXXX-XXXX-XXXX` |
-| `product` | string | 否 | 产品标识，默认使用配置文件中的值 |
+| `license_key` | string | Yes | License key, format `FG-XXXX-XXXX-XXXX` |
+| `product` | string | No | Product identifier; defaults to the value in the configuration file |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "code": 0,
@@ -167,13 +167,13 @@ Content-Type: application/json
 }
 ```
 
-#### 清除授权
+#### Clear License
 
 ```
 DELETE /api/v1/gateway/license
 ```
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "code": 0,
@@ -184,18 +184,18 @@ DELETE /api/v1/gateway/license
 
 ---
 
-## 3. MCP JSON-RPC 接口
+## 3. MCP JSON-RPC Endpoints
 
-### 3.1 协议说明
+### 3.1 Protocol Description
 
-所有 MCP 工具通过单一端点调用：
+All MCP tools are invoked through a single endpoint:
 
 ```
 POST /mcp/http
 Content-Type: application/json
 ```
 
-**请求格式** (JSON-RPC 2.0):
+**Request format** (JSON-RPC 2.0):
 ```json
 {
   "jsonrpc": "2.0",
@@ -208,7 +208,7 @@ Content-Type: application/json
 }
 ```
 
-**响应格式**:
+**Response format**:
 ```json
 {
   "jsonrpc": "2.0",
@@ -217,29 +217,29 @@ Content-Type: application/json
 }
 ```
 
-> **注意**: `GET /mcp/http` 返回 `{"error": "SSE stream not supported yet. Use POST for JSON-RPC."}`，暂不支持 SSE。
+> **Note**: `GET /mcp/http` returns `{"error": "SSE stream not supported yet. Use POST for JSON-RPC."}`; SSE is not supported yet.
 
-### 3.2 协议方法
+### 3.2 Protocol Methods
 
-| 方法 | 说明 |
+| Method | Description |
 |------|------|
-| `initialize` | MCP 协议握手 |
-| `ping` | 保活心跳 |
-| `tools/list` | 列出所有已注册工具 |
-| `tools/call` | 调用指定工具 |
-| `notifications/initialized` | 初始化完成通知（无响应） |
+| `initialize` | MCP protocol handshake |
+| `ping` | Keep-alive heartbeat |
+| `tools/list` | List all registered tools |
+| `tools/call` | Invoke the specified tool |
+| `notifications/initialized` | Initialization-complete notification (no response) |
 
 ---
 
-## 4. 米家平台
+## 4. 米家 (Mi Home) Platform
 
 ### 4.1 xiaomi/auth_status
 
-检查米家 OAuth 授权状态。
+Check the Mi Home OAuth authorization status.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "authorized": true,
@@ -250,11 +250,11 @@ Content-Type: application/json
 
 ### 4.2 xiaomi/auth_url
 
-获取米家 OAuth 授权 URL。
+Get the Mi Home OAuth authorization URL.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "url": "https://account.xiaomi.com/oauth2/authorize?...",
@@ -264,27 +264,27 @@ Content-Type: application/json
 
 ### 4.3 xiaomi/auth_callback
 
-处理 OAuth 授权回调 code。
+Process the OAuth authorization callback code.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `code` | string | 是 | OAuth 授权码 |
+| `code` | string | Yes | OAuth authorization code |
 
 ### 4.4 xiaomi/refresh
 
-刷新米家 Token。
+Refresh the Mi Home token.
 
-**参数**: 无
+**Parameters**: none
 
 ### 4.5 xiaomi/camera_list
 
-获取米家摄像头列表。
+Get the list of Mi Home cameras.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `filter` | string[] | 否 | 关键词过滤数组 |
+| `filter` | string[] | No | Keyword filter array |
 
-**响应示例**:
+**Response example**:
 ```json
 [
   {
@@ -302,152 +302,152 @@ Content-Type: application/json
 
 ### 4.6 xiaomi/camera_status
 
-查询摄像头连接状态。
+Query the camera connection status.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `camera_id` | string | 否 | 摄像头 DID，留空返回所有 |
+| `camera_id` | string | No | Camera DID; leave empty to return all |
 
 ### 4.7 xiaomi/camera_connect
 
-连接摄像头。
+Connect to a camera.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `camera_id` | string | 是 | 摄像头 DID |
+| `camera_id` | string | Yes | Camera DID |
 
 ### 4.8 xiaomi/camera_disconnect
 
-断开摄像头连接。
+Disconnect the camera.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `camera_id` | string | 是 | 摄像头 DID |
+| `camera_id` | string | Yes | Camera DID |
 
 ### 4.9 xiaomi/camera_snapshot
 
-抓拍摄像头画面。
+Capture a snapshot from the camera.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `camera_id` | string | 是 | 摄像头 DID |
-| `channel` | integer | 否 | 通道号，默认 `0` |
-| `count` | integer | 否 | 抓拍帧数，默认 `1`，最大 `10` |
-| `use_subprocess` | boolean | 否 | 是否使用子进程抓拍 |
+| `camera_id` | string | Yes | Camera DID |
+| `channel` | integer | No | Channel number, default `0` |
+| `count` | integer | No | Number of frames to capture, default `1`, maximum `10` |
+| `use_subprocess` | boolean | No | Whether to capture in a subprocess |
 
 ### 4.10 xiaomi/get_area_info
 
-获取米家家庭/房间信息。
+Get the home and room information from Mi Home.
 
-**参数**: 无
+**Parameters**: none
 
 ### 4.11 xiaomi/get_device_classes
 
-获取米家设备分类列表。
+Get the list of Mi Home device categories.
 
-**参数**: 无
+**Parameters**: none
 
 ### 4.12 xiaomi/get_devices
 
-获取米家设备列表。
+Get the list of Mi Home devices.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `area_id` | string | 否 | 按房间 ID 过滤 |
-| `device_class` | string | 否 | 按设备分类过滤 |
+| `area_id` | string | No | Filter by room ID |
+| `device_class` | string | No | Filter by device category |
 
 ### 4.13 get_xiaomi_device_properties
 
-获取米家设备属性值。
+Get Mi Home device property values.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 DID |
-| `siid` | integer | 是 | 服务 ID |
-| `piids` | integer[] | 是 | 属性 ID 数组 |
+| `deviceId` | string | Yes | Device DID |
+| `siid` | integer | Yes | Service ID |
+| `piids` | integer[] | Yes | Property ID array |
 
 ### 4.14 set_xiaomi_device_property
 
-设置米家设备属性。
+Set a Mi Home device property.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 DID |
-| `siid` | integer | 是 | 服务 ID |
-| `piid` | integer | 是 | 属性 ID |
-| `value` | any | 是 | 属性值 |
+| `deviceId` | string | Yes | Device DID |
+| `siid` | integer | Yes | Service ID |
+| `piid` | integer | Yes | Property ID |
+| `value` | any | Yes | Property value |
 
 ### 4.15 execute_xiaomi_device_action
 
-执行米家设备动作。
+Execute a Mi Home device action.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 DID |
-| `siid` | integer | 是 | 服务 ID |
-| `aiid` | integer | 是 | 动作 ID |
-| `params` | array | 否 | 动作参数 |
+| `deviceId` | string | Yes | Device DID |
+| `siid` | integer | Yes | Service ID |
+| `aiid` | integer | Yes | Action ID |
+| `params` | array | No | Action parameters |
 
 ### 4.16 xiaomi/scene_list
 
-获取米家场景列表。
+Get the list of Mi Home scenes.
 
-**参数**: 无
+**Parameters**: none
 
 ### 4.17 xiaomi/scene_trigger
 
-触发米家场景。
+Trigger a Mi Home scene.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `sceneId` | string | 是 | 场景 ID |
+| `sceneId` | string | Yes | Scene ID |
 
 ---
 
-## 5. 小爱音箱
+## 5. 小爱音箱 (Xiaoai Speaker)
 
 ### 5.1 xiaoai/play_music
 
-控制小爱音箱播放音乐/语音。
+Control the Xiaoai speaker to play music or voice content.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `device_id` | string | 是 | 小爱音箱设备 ID |
-| `text` | string | 是 | 播放内容 |
-| `command` | string | 否 | 播放命令（`text` 的别名） |
+| `device_id` | string | Yes | Xiaoai speaker device ID |
+| `text` | string | Yes | Content to play |
+| `command` | string | No | Playback command (an alias of `text`) |
 
 ### 5.2 xiaoai/tts
 
-小爱音箱 TTS 语音播报。
+Xiaoai speaker TTS speech broadcast.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `device_id` | string | 是 | 小爱音箱设备 ID |
-| `text` | string | 是 | 播报文本 |
+| `device_id` | string | Yes | Xiaoai speaker device ID |
+| `text` | string | Yes | Text to broadcast |
 
 ### 5.3 xiaoai/control
 
-发送小爱音箱控制命令。
+Send a control command to the Xiaoai speaker.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `device_id` | string | 是 | 小爱音箱设备 ID |
-| `command` | string | 是 | 控制命令 |
-| `silence` | boolean | 否 | 是否静音执行，默认 `true` |
+| `device_id` | string | Yes | Xiaoai speaker device ID |
+| `command` | string | Yes | Control command |
+| `silence` | boolean | No | Execute silently, default `true` |
 
 ---
 
-## 6. 小智平台
+## 6. 小智 (Xiaozhi) Platform
 
-> 小智平台支持多连接（最多由 `XIAOZHI_MAX_CONNECTIONS` 常量定义）。
+> The Xiaozhi platform supports multiple connections (up to the limit defined by the `XIAOZHI_MAX_CONNECTIONS` constant).
 
 ### 6.1 xiaozhi/status
 
-获取所有小智平台连接状态。
+Get the connection status of all Xiaozhi platform connections.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "state": "connected",
@@ -473,45 +473,45 @@ Content-Type: application/json
 
 ### 6.2 xiaozhi/list
 
-列出所有已配置的小智连接端点。
+List all configured Xiaozhi connection endpoints.
 
-**参数**: 无
+**Parameters**: none
 
 ### 6.3 xiaozhi/add
 
-添加新的小智平台 WebSocket 连接。
+Add a new Xiaozhi platform WebSocket connection.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `endpoint` | string | 是 | WebSocket URL (`ws://` 或 `wss://`) |
+| `endpoint` | string | Yes | WebSocket URL (`ws://` or `wss://`) |
 
 ### 6.4 xiaozhi/remove
 
-删除指定索引的小智连接。
+Delete the Xiaozhi connection at the given index.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `index` | integer | 是 | 连接索引（0-based） |
+| `index` | integer | Yes | Connection index (0-based) |
 
 ### 6.5 xiaozhi/set_endpoint
 
-设置第一个小智平台端点（向后兼容接口）。
+Set the first Xiaozhi platform endpoint (backward-compatible endpoint).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `endpoint` | string | 否 | WebSocket URL，留空禁用 |
+| `endpoint` | string | No | WebSocket URL; leave empty to disable |
 
 ---
 
-## 7. 授权与网关
+## 7. License and Gateway
 
 ### 7.1 license/status
 
-获取设备授权状态。
+Get the device license status.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "edition": "licensed",
@@ -522,18 +522,18 @@ Content-Type: application/json
 }
 ```
 
-> 免费版时额外返回 `guidance` 字段，包含授权指引信息。
+> On the free edition, an additional `guidance` field is returned, containing license guidance information.
 
 ### 7.2 license/set
 
-写入授权码并激活。
+Write a license key and activate it.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `license_key` | string | 是 | 授权码，格式 `FG-XXXX-XXXX-XXXX` |
-| `product` | string | 否 | 产品标识，默认使用配置文件中的值 |
+| `license_key` | string | Yes | License key, format `FG-XXXX-XXXX-XXXX` |
+| `product` | string | No | Product identifier; defaults to the value in the configuration file |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "edition": "licensed",
@@ -545,15 +545,15 @@ Content-Type: application/json
 
 ### 7.3 license/clear
 
-清除授权码，恢复免费版。
+Clear the license key and revert to the free edition.
 
-**参数**: 无
+**Parameters**: none
 
 ### 7.4 gateway/info
 
-获取网关信息（MCP 版本，对应 REST 的 `GET /api/v1/gateway/info`）。
+Get gateway info (the MCP counterpart of the REST endpoint `GET /api/v1/gateway/info`).
 
-**参数**: 无
+**Parameters**: none
 
 ---
 
@@ -561,16 +561,16 @@ Content-Type: application/json
 
 ### 8.1 xiaomi/camera_vision_chat
 
-向 Vision AI 提问摄像头画面内容。
+Ask Vision AI about what the camera sees.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `camera_id` | string | 是 | 摄像头设备 DID |
-| `query` | string | 是 | 向 AI 提出的问题 |
-| `channel` | integer | 否 | 摄像头通道，默认 `0` |
-| `count` | integer | 否 | 发送最近几帧，默认 `3`，最大 `10` |
+| `camera_id` | string | Yes | Camera device DID |
+| `query` | string | Yes | The question asked of the AI |
+| `channel` | integer | No | Camera channel, default `0` |
+| `count` | integer | No | Number of most recent frames sent, default `3`, maximum `10` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "camera_id": "102838844",
@@ -586,26 +586,26 @@ Content-Type: application/json
 }
 ```
 
-> 需先在 `config.yaml` 中配置 `vision.enabled=true` 和 `api_key`。
+> `vision.enabled=true` and `api_key` must first be configured in `config.yaml`.
 
 ---
 
-## 9. 触发规则
+## 9. Trigger Rules
 
 ### 9.1 trigger/create
 
-创建摄像头触发规则。
+Create a camera trigger rule.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 规则名称 |
-| `cameras` | string[] | 是 | 关联摄像头 DID 列表 |
-| `condition` | string | 是 | 自然语言触发条件 |
-| `actions` | array | 否 | 触发时执行的动作列表 |
-| `notify` | object | 否 | 通知配置 `{title, body}` |
-| `filter` | object | 否 | 过滤器 `{interval, period}` |
+| `name` | string | Yes | Rule name |
+| `cameras` | string[] | Yes | List of associated camera DIDs |
+| `condition` | string | Yes | Natural-language trigger condition |
+| `actions` | array | No | List of actions executed on trigger |
+| `notify` | object | No | Notification configuration `{title, body}` |
+| `filter` | object | No | Filter `{interval, period}` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "id": "rule_001",
@@ -616,62 +616,62 @@ Content-Type: application/json
 
 ### 9.2 trigger/list
 
-列出所有触发规则。
+List all trigger rules.
 
-**参数**: 无
+**Parameters**: none
 
 ### 9.3 trigger/update
 
-更新触发规则。
+Update a trigger rule.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | string | 是 | 规则 ID |
-| `name` | string | 否 | 新名称 |
-| `cameras` | string[] | 否 | 新摄像头列表 |
-| `condition` | string | 否 | 新触发条件 |
-| `actions` | array | 否 | 新动作列表 |
-| `notify` | object | 否 | 新通知配置 |
-| `filter` | object | 否 | 新过滤器 |
-| `enabled` | boolean | 否 | 启用/禁用 |
+| `id` | string | Yes | Rule ID |
+| `name` | string | No | New name |
+| `cameras` | string[] | No | New camera list |
+| `condition` | string | No | New trigger condition |
+| `actions` | array | No | New action list |
+| `notify` | object | No | New notification configuration |
+| `filter` | object | No | New filter |
+| `enabled` | boolean | No | Enable/disable |
 
 ### 9.4 trigger/delete
 
-删除触发规则。
+Delete a trigger rule.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | string | 是 | 规则 ID |
+| `id` | string | Yes | Rule ID |
 
 ### 9.5 trigger/toggle
 
-启用或禁用触发规则。
+Enable or disable a trigger rule.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | string | 是 | 规则 ID |
-| `enabled` | boolean | 是 | `true` 启用，`false` 禁用 |
+| `id` | string | Yes | Rule ID |
+| `enabled` | boolean | Yes | `true` enables, `false` disables |
 
 ### 9.6 trigger/logs
 
-查看触发规则执行日志。
+View the execution logs of trigger rules.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `limit` | integer | 否 | 返回数量限制，默认 `50` |
-| `rule_id` | string | 否 | 按规则 ID 过滤 |
+| `limit` | integer | No | Maximum number of entries returned, default `50` |
+| `rule_id` | string | No | Filter by rule ID |
 
 ---
 
-## 10. 配置管理
+## 10. Configuration Management
 
 ### 10.1 config/get_vision
 
-获取 Vision AI 当前配置。
+Get the current Vision AI configuration.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "enabled": true,
@@ -687,25 +687,25 @@ Content-Type: application/json
 
 ### 10.2 config/set_vision
 
-更新 Vision AI 配置并保存到 `config.yaml`，修改后立即生效。
+Update the Vision AI configuration and save it to `config.yaml`; the change takes effect immediately.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `enabled` | boolean | 否 | 是否启用 Vision AI |
-| `api_key` | string | 否 | LLM API Key |
-| `base_url` | string | 否 | OpenAI 兼容 API 端点 |
-| `model` | string | 否 | 模型名称 |
-| `temperature` | number | 否 | 温度参数 (0-2) |
-| `max_tokens` | integer | 否 | 最大响应 Token 数 |
-| `timeout_seconds` | integer | 否 | HTTP 超时秒数 |
+| `enabled` | boolean | No | Whether Vision AI is enabled |
+| `api_key` | string | No | LLM API key |
+| `base_url` | string | No | OpenAI-compatible API endpoint |
+| `model` | string | No | Model name |
+| `temperature` | number | No | Temperature parameter (0-2) |
+| `max_tokens` | integer | No | Maximum response token count |
+| `timeout_seconds` | integer | No | HTTP timeout in seconds |
 
 ### 10.3 config/get_trigger
 
-获取触发引擎当前配置。
+Get the current trigger engine configuration.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "enabled": true,
@@ -719,30 +719,30 @@ Content-Type: application/json
 
 ### 10.4 config/set_trigger
 
-更新触发引擎配置并保存到 `config.yaml`，修改后立即生效。
+Update the trigger engine configuration and save it to `config.yaml`; the change takes effect immediately.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `enabled` | boolean | 否 | 是否启用触发引擎 |
-| `interval_seconds` | integer | 否 | 规则检查间隔（秒） |
-| `vision_img_count` | integer | 否 | 每次 LLM 调用使用的帧数 |
-| `motion_threshold` | integer | 否 | dHash 运动检测阈值 |
-| `log_ttl_days` | integer | 否 | 日志保留天数 |
-| `min_trigger_interval` | integer | 否 | 单规则最小触发间隔（秒） |
+| `enabled` | boolean | No | Whether the trigger engine is enabled |
+| `interval_seconds` | integer | No | Rule check interval (seconds) |
+| `vision_img_count` | integer | No | Number of frames used per LLM call |
+| `motion_threshold` | integer | No | dHash motion detection threshold |
+| `log_ttl_days` | integer | No | Number of days logs are retained |
+| `min_trigger_interval` | integer | No | Minimum trigger interval per rule (seconds) |
 
 ---
 
-## 11. 统计数据
+## 11. Statistics
 
 ### 11.1 stats/token_usage
 
-获取 Token 消耗统计。
+Get token usage statistics.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `days` | integer | 否 | 统计最近多少天，默认 `30` |
+| `days` | integer | No | Number of recent days to aggregate, default `30` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "summary": { "total_tokens": 150000, "total_calls": 300 },
@@ -754,21 +754,21 @@ Content-Type: application/json
 
 ### 11.2 stats/token_records
 
-获取最近 LLM API 调用记录。
+Get recent LLM API call records.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `limit` | integer | 否 | 返回记录数，默认 `50` |
+| `limit` | integer | No | Number of records returned, default `50` |
 
 ### 11.3 stats/trigger_summary
 
-获取触发事件聚合统计（每日趋势、规则排名、摄像头分布、时间热力图）。
+Get aggregated trigger event statistics (daily trend, rule ranking, camera distribution, time heatmap).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `days` | integer | 否 | 统计最近多少天，默认 `30` |
+| `days` | integer | No | Number of recent days to aggregate, default `30` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "overview": {
@@ -784,11 +784,11 @@ Content-Type: application/json
 
 ### 11.4 stats/dashboard
 
-获取综合看板摘要数据。
+Get the dashboard summary data.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "trigger_engine": {
@@ -812,24 +812,24 @@ Content-Type: application/json
 
 ---
 
-## 12. 多平台设备
+## 12. Multi-platform Devices
 
 ### 12.1 auth/platforms
 
-列出所有已注册的智能家居平台及认证状态。
+List all registered smart home platforms and their authentication status.
 
-**参数**: 无
+**Parameters**: none
 
 ### 12.2 device/list
 
-获取所有已认证平台的设备列表（跨平台统一）。
+Get the device list of all authenticated platforms (unified across platforms).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `platform` | string | 否 | 按平台过滤: `xiaomi` / `tuya` / `midea` / `ewelink` |
-| `filter` | string[] | 否 | 关键词过滤数组，匹配设备名称、型号、房间名 |
+| `platform` | string | No | Filter by platform: `xiaomi` / `tuya` / `midea` / `ewelink` |
+| `filter` | string[] | No | Keyword filter array, matched against device name, model, and room name |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "total": 24,
@@ -850,156 +850,156 @@ Content-Type: application/json
 
 ### 12.3 device/specs
 
-获取设备功能规格定义（跨平台统一）。
+Get the device capability specification definitions (unified across platforms).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 ID |
+| `deviceId` | string | Yes | Device ID |
 
-### 12.4 涂鸦平台
+### 12.4 涂鸦 (Tuya) Platform
 
-| 工具名 | 必填参数 | 说明 |
+| Tool name | Required parameters | Description |
 |--------|----------|------|
-| `auth/tuya_qr` | `user_code` | 获取涂鸦 QR 码授权 |
-| `auth/tuya_qr_status` | `token`, `user_code` | 查询扫码状态 |
-| `auth/tuya_logout` | 无 | 退出涂鸦授权 |
-| `tuya/refresh` | 无 | 刷新涂鸦设备列表 |
-| `get_tuya_device_properties` | `deviceId` | 获取设备 DP 属性 |
-| `set_tuya_device_property` | `deviceId`, `code`, `value` | 设置设备 DP 属性（需授权） |
+| `auth/tuya_qr` | `user_code` | Start Tuya QR code authorization |
+| `auth/tuya_qr_status` | `token`, `user_code` | Query the QR scan status |
+| `auth/tuya_logout` | none | Log out of Tuya authorization |
+| `tuya/refresh` | none | Refresh the Tuya device list |
+| `get_tuya_device_properties` | `deviceId` | Get the device DP properties |
+| `set_tuya_device_property` | `deviceId`, `code`, `value` | Set a device DP property (requires authorization) |
 
-**set_tuya_device_property 参数**:
+**set_tuya_device_property parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 ID |
-| `code` | string | 是 | DP Code（如 `switch_1`, `bright_value`） |
-| `value` | any | 是 | DP 值（boolean/number/string） |
+| `deviceId` | string | Yes | Device ID |
+| `code` | string | Yes | DP code (e.g. `switch_1`, `bright_value`) |
+| `value` | any | Yes | DP value (boolean/number/string) |
 
-### 12.5 美的平台
+### 12.5 美的 (Midea) Platform
 
-| 工具名 | 必填参数 | 说明 |
+| Tool name | Required parameters | Description |
 |--------|----------|------|
-| `auth/midea_login` | `account`, `password` | 美的平台登录 |
-| `auth/midea_logout` | 无 | 退出美的授权 |
-| `midea/refresh` | 无 | 刷新美的设备列表 |
-| `get_midea_device_properties` | `deviceId` | 获取设备属性 |
-| `set_midea_device_property` | `deviceId`, `property`, `value` | 设置设备属性（需授权） |
+| `auth/midea_login` | `account`, `password` | Log in to the Midea platform |
+| `auth/midea_logout` | none | Log out of Midea authorization |
+| `midea/refresh` | none | Refresh the Midea device list |
+| `get_midea_device_properties` | `deviceId` | Get the device properties |
+| `set_midea_device_property` | `deviceId`, `property`, `value` | Set a device property (requires authorization) |
 
-**auth/midea_login 参数**:
+**auth/midea_login parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `account` | string | 是 | 手机号或邮箱 |
-| `password` | string | 是 | 密码 |
-| `cloud` | string | 否 | 云端类型: `meiju`(默认) 或 `msmart` |
+| `account` | string | Yes | Phone number or email address |
+| `password` | string | Yes | Password |
+| `cloud` | string | No | Cloud type: `meiju` (default) or `msmart` |
 
-**set_midea_device_property 参数**:
+**set_midea_device_property parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 ID (applianceCode) |
-| `property` | string | 是 | 属性名（如 `power`, `temperature`, `mode`） |
-| `value` | any | 是 | 属性值 |
+| `deviceId` | string | Yes | Device ID (applianceCode) |
+| `property` | string | Yes | Property name (e.g. `power`, `temperature`, `mode`) |
+| `value` | any | Yes | Property value |
 
 ### 12.6 易微联 (eWeLink)
 
-| 工具名 | 必填参数 | 说明 |
+| Tool name | Required parameters | Description |
 |--------|----------|------|
-| `auth/ewelink_login` | `email`, `password` | 易微联平台登录 |
-| `auth/ewelink_logout` | 无 | 退出易微联授权 |
-| `ewelink/refresh` | 无 | 刷新易微联设备列表 |
-| `get_ewelink_device_properties` | `deviceId` | 获取设备属性 |
-| `set_ewelink_device_property` | `deviceId`, `property`, `value` | 设置设备属性（需授权） |
+| `auth/ewelink_login` | `email`, `password` | Log in to the eWeLink platform |
+| `auth/ewelink_logout` | none | Log out of eWeLink authorization |
+| `ewelink/refresh` | none | Refresh the eWeLink device list |
+| `get_ewelink_device_properties` | `deviceId` | Get the device properties |
+| `set_ewelink_device_property` | `deviceId`, `property`, `value` | Set a device property (requires authorization) |
 
-**auth/ewelink_login 参数**:
+**auth/ewelink_login parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `email` | string | 是 | 邮箱或手机号 |
-| `password` | string | 是 | 密码 |
-| `country_code` | string | 否 | 国家代码，默认 `+86` |
+| `email` | string | Yes | Email address or phone number |
+| `password` | string | Yes | Password |
+| `country_code` | string | No | Country code, default `+86` |
 
-**set_ewelink_device_property 参数**:
+**set_ewelink_device_property parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `deviceId` | string | 是 | 设备 ID |
-| `property` | string | 是 | 属性名（如 `switch`, `switches`） |
-| `value` | any | 是 | 属性值（boolean/string/array） |
+| `deviceId` | string | Yes | Device ID |
+| `property` | string | Yes | Property name (e.g. `switch`, `switches`) |
+| `value` | any | Yes | Property value (boolean/string/array) |
 
 ---
 
-## 13. 定时任务
+## 13. Scheduled Tasks
 
 ### 13.1 schedule/add
 
-创建定时任务。
+Create a scheduled task.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 任务名称 |
-| `scheduled_time` | string | 是 | 执行时间 ISO 8601，如 `2026-05-24T08:00:00+08:00` |
-| `tool_name` | string | 是 | 要执行的 MCP 工具名 |
-| `tool_args` | string | 是 | 工具参数 JSON 字符串 |
-| `repeat` | string | 否 | 重复类型: `none`/`daily`/`weekdays`/`weekends`/`weekly`/`custom` |
-| `repeat_days` | string | 否 | 自定义重复天 JSON 数组，如 `[1,2,3,4,5]` (周一到周五) |
+| `name` | string | Yes | Task name |
+| `scheduled_time` | string | Yes | Execution time in ISO 8601, e.g. `2026-05-24T08:00:00+08:00` |
+| `tool_name` | string | Yes | Name of the MCP tool to execute |
+| `tool_args` | string | Yes | Tool arguments as a JSON string |
+| `repeat` | string | No | Repeat type: `none`/`daily`/`weekdays`/`weekends`/`weekly`/`custom` |
+| `repeat_days` | string | No | Custom repeat days as a JSON array, e.g. `[1,2,3,4,5]` (Monday to Friday) |
 
 ### 13.2 schedule/list
 
-列出定时任务。
+List scheduled tasks.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `status` | string | 否 | 筛选状态: `pending`/`completed`/`cancelled`，留空返回全部 |
+| `status` | string | No | Filter by status: `pending`/`completed`/`cancelled`; leave empty to return all |
 
 ### 13.3 schedule/get
 
-获取定时任务详情。
+Get the details of a scheduled task.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | integer | 是 | 任务 ID |
+| `id` | integer | Yes | Task ID |
 
 ### 13.4 schedule/update
 
-更新定时任务（仅 pending 状态可修改）。
+Update a scheduled task (only tasks in `pending` status can be modified).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | integer | 是 | 任务 ID |
-| `scheduled_time` | string | 否 | 新执行时间 ISO 8601 |
-| `repeat` | string | 否 | 新重复类型 |
-| `repeat_days` | string | 否 | 新自定义重复天 |
+| `id` | integer | Yes | Task ID |
+| `scheduled_time` | string | No | New execution time in ISO 8601 |
+| `repeat` | string | No | New repeat type |
+| `repeat_days` | string | No | New custom repeat days |
 
 ### 13.5 schedule/delete
 
-删除定时任务。
+Delete a scheduled task.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | integer | 是 | 任务 ID |
+| `id` | integer | Yes | Task ID |
 
 ### 13.6 schedule/cancel
 
-取消定时任务（保留记录，状态变为 `cancelled`）。
+Cancel a scheduled task (the record is kept and its status becomes `cancelled`).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `id` | integer | 是 | 任务 ID |
+| `id` | integer | Yes | Task ID |
 
 ---
 
-## 14. 技能管理
+## 14. Skill Management
 
 ### 14.1 skill/list
 
-列出所有技能。
+List all skills.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `source` | string | 否 | 来源过滤: `all`(默认) / `builtin` / `user` |
+| `source` | string | No | Source filter: `all` (default) / `builtin` / `user` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "skills": [
@@ -1018,13 +1018,13 @@ Content-Type: application/json
 
 ### 14.2 skill/read
 
-读取指定技能的完整内容。
+Read the full content of the specified skill.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 技能名称 |
+| `name` | string | Yes | Skill name |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "name": "smart_light",
@@ -1040,37 +1040,37 @@ Content-Type: application/json
 
 ### 14.3 skill/create
 
-创建新的自定义技能。
+Create a new custom skill.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 技能名称（字母数字和连字符） |
-| `content` | string | 是 | 技能内容（Markdown + YAML frontmatter） |
+| `name` | string | Yes | Skill name (letters, digits, and hyphens) |
+| `content` | string | Yes | Skill content (Markdown + YAML frontmatter) |
 
 ### 14.4 skill/update
 
-更新已有自定义技能内容。
+Update the content of an existing custom skill.
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 技能名称 |
-| `content` | string | 是 | 新的技能内容 |
+| `name` | string | Yes | Skill name |
+| `content` | string | Yes | New skill content |
 
 ### 14.5 skill/delete
 
-删除指定自定义技能（内置技能不可删除）。
+Delete the specified custom skill (built-in skills cannot be deleted).
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |------|------|------|------|
-| `name` | string | 是 | 技能名称 |
+| `name` | string | Yes | Skill name |
 
 ### 14.6 skill/context
 
-获取所有常驻技能的上下文内容。
+Get the context content of all resident skills.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "context": "...",
@@ -1080,6 +1080,6 @@ Content-Type: application/json
 
 ### 14.7 skill/reload
 
-重新扫描技能目录并刷新缓存。
+Rescan the skill directory and refresh the cache.
 
-**参数**: 无
+**Parameters**: none

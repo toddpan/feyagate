@@ -1,45 +1,45 @@
-# FeyaGate MCP API 文档
+# FeyaGate MCP API Documentation
 
 > Examples below show raw HTTP for reference. In practice call MCP tools, or run `npx -y feyagate call <tool> '<json>'`. The engine port may differ from 38080 (see `npx -y feyagate status`).
 
 
-> **适用产品**: miloco-mcp-server (桌面版虚拟网关)
-> **协议**: MCP (Model Context Protocol) JSON-RPC 2.0
-> **MCP 端点**: `POST http://<网关IP>:38080/mcp/http`
-> **协议版本**: `2025-03-26`
+> **Applicable product**: miloco-mcp-server (desktop virtual gateway)
+> **Protocol**: MCP (Model Context Protocol) JSON-RPC 2.0
+> **MCP endpoint**: `POST http://<gateway-IP>:38080/mcp/http`
+> **Protocol version**: `2025-03-26`
 
 ---
 
-## 目录
+## Table of Contents
 
-- [1. 连接指南](#1-连接指南)
-- [2. JSON-RPC 2.0 规范](#2-json-rpc-20-规范)
-- [3. 协议方法](#3-协议方法)
-- [4. MCP Tools 总览 (76 个)](#4-mcp-tools-总览-76-个)
-- [5. 通用设备工具](#5-通用设备工具)
-- [6. 小米 (Xiaomi) 平台](#6-小米-xiaomi-平台)
-- [7. 涂鸦 (Tuya) 平台](#7-涂鸦-tuya-平台)
-- [8. 美的 (Midea) 平台](#8-美的-midea-平台)
-- [9. 易微联 (eWeLink) 平台](#9-易微联-ewelink-平台)
-- [10. 小爱音箱控制](#10-小爱音箱控制)
-- [11. 小智平台](#11-小智平台)
-- [12. 认证与平台管理](#12-认证与平台管理)
+- [1. Connection Guide](#1-connection-guide)
+- [2. JSON-RPC 2.0 Specification](#2-json-rpc-20-specification)
+- [3. Protocol Methods](#3-protocol-methods)
+- [4. MCP Tools Overview (76)](#4-mcp-tools-overview-76)
+- [5. Common Device Tools](#5-common-device-tools)
+- [6. 小米 (Xiaomi) Platform](#6-小米-xiaomi-platform)
+- [7. 涂鸦 (Tuya) Platform](#7-涂鸦-tuya-platform)
+- [8. 美的 (Midea) Platform](#8-美的-midea-platform)
+- [9. 易微联 (eWeLink) Platform](#9-易微联-ewelink-platform)
+- [10. Xiaoai Speaker Control](#10-xiaoai-speaker-control)
+- [11. Xiaozhi Platform](#11-xiaozhi-platform)
+- [12. Authentication and Platform Management](#12-authentication-and-platform-management)
 - [13. Vision AI](#13-vision-ai)
-- [14. 触发规则](#14-触发规则)
-- [15. 定时任务](#15-定时任务)
-- [16. 技能系统](#16-技能系统)
-- [17. 配置管理](#17-配置管理)
-- [18. 统计数据](#18-统计数据)
-- [19. 授权码管理](#19-授权码管理)
-- [20. 网关信息](#20-网关信息)
-- [21. 错误码](#21-错误码)
-- [附录: 快速示例](#附录-快速示例)
+- [14. Trigger Rules](#14-trigger-rules)
+- [15. Scheduled Tasks](#15-scheduled-tasks)
+- [16. Skill System](#16-skill-system)
+- [17. Configuration Management](#17-configuration-management)
+- [18. Statistics](#18-statistics)
+- [19. License Key Management](#19-license-key-management)
+- [20. Gateway Information](#20-gateway-information)
+- [21. Error Codes](#21-error-codes)
+- [Appendix: Quick Examples](#appendix-quick-examples)
 
 ---
 
-## 1. 连接指南
+## 1. Connection Guide
 
-所有 MCP 调用均通过 `POST /mcp/http` 以 JSON-RPC 2.0 格式发送，无需事先握手。
+All MCP calls are sent to `POST /mcp/http` in JSON-RPC 2.0 format; no prior handshake is required.
 
 ```bash
 # 初始化
@@ -53,15 +53,15 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
-> **无状态**: 服务器不维持 HTTP 会话状态，不返回 `Mcp-Session-Id` header，每次请求均为无状态调用。
+> **Stateless**: the server keeps no HTTP session state and returns no `Mcp-Session-Id` header; every request is a stateless call.
 >
-> **无 WebSocket**: 服务器不提供 inbound WebSocket 端点。`/mcp` WebSocket 路径不存在。服务器作为 WebSocket **客户端**主动连接小智平台，由 `xiaozhi/*` 工具管理。
+> **No WebSocket**: the server provides no inbound WebSocket endpoint. The `/mcp` WebSocket path does not exist. The server actively connects to the Xiaozhi platform as a WebSocket **client**, managed through the `xiaozhi/*` tools.
 
 ---
 
-## 2. JSON-RPC 2.0 规范
+## 2. JSON-RPC 2.0 Specification
 
-### 请求结构
+### Request Structure
 
 ```json
 {
@@ -75,9 +75,9 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 成功响应
+### Success Response
 
-工具返回值被包装为 MCP content 格式：
+The tool return value is wrapped in the MCP content format:
 
 ```json
 {
@@ -91,11 +91,11 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-> 工具返回的 JSON 对象会被序列化为字符串放在 `content[0].text` 中。
+> The JSON object returned by the tool is serialized into a string placed in `content[0].text`.
 
-### 图片响应
+### Image Response
 
-当工具返回含 `images` 数组（含 `data_url` 字段）的结果时，服务器会自动提取图片为独立的 MCP image content：
+When a tool returns a result containing an `images` array (with a `data_url` field), the server automatically extracts the images into standalone MCP image content:
 
 ```json
 {
@@ -110,7 +110,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 错误响应
+### Error Response
 
 ```json
 {
@@ -120,9 +120,9 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 工具执行异常
+### Tool Execution Exception
 
-当工具 handler 抛出异常时，返回 `isError: true`：
+When a tool handler throws an exception, `isError: true` is returned:
 
 ```json
 {
@@ -139,15 +139,15 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 3. 协议方法
+## 3. Protocol Methods
 
-| 方法 | 说明 |
-|------|------|
-| `initialize` | MCP 协议握手 |
-| `ping` | 保活心跳 |
-| `tools/list` | 列出所有已注册工具 |
-| `tools/call` | 调用指定工具 |
-| `notifications/initialized` | 初始化完成通知（无响应） |
+| Method | Description |
+|--------|-------------|
+| `initialize` | MCP protocol handshake |
+| `ping` | Keep-alive heartbeat |
+| `tools/list` | List all registered tools |
+| `tools/call` | Invoke the specified tool |
+| `notifications/initialized` | Initialization-complete notification (no response) |
 
 ### initialize
 
@@ -163,7 +163,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "jsonrpc": "2.0", "id": 1,
@@ -181,7 +181,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 { "jsonrpc": "2.0", "id": 1, "method": "ping", "params": {} }
 ```
 
-**响应**:
+**Response**:
 ```json
 { "jsonrpc": "2.0", "id": 1, "result": {} }
 ```
@@ -192,7 +192,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 { "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {} }
 ```
 
-**响应**:
+**Response**:
 ```json
 {
   "jsonrpc": "2.0", "id": 1,
@@ -223,105 +223,105 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 4. MCP Tools 总览 (76 个)
+## 4. MCP Tools Overview (76)
 
-> **参数命名规则**:
-> - 设备控制工具 (`device/specs`, `set_*`, `get_*`, `execute_*`) 统一使用 `deviceId`（camelCase）；仅 `xiaoai/*`（tts/control/play_music）用 `device_id`（snake_case）
-> - 平台专属工具使用 `camelCase`（如 `deviceId`, `siid`, `piids`）
+> **Parameter naming rules**:
+> - Device control tools (`device/specs`, `set_*`, `get_*`, `execute_*`) uniformly use `deviceId` (camelCase); only `xiaoai/*` (tts/control/play_music) uses `device_id` (snake_case)
+> - Platform-specific tools use `camelCase` (e.g. `deviceId`, `siid`, `piids`)
 
-| # | 工具名 | 类别 | 必填参数 |
-|---|--------|------|----------|
-| 1 | `device/list` | 通用设备 | — |
-| 2 | `device/specs` | 通用设备 | `deviceId` |
-| 3 | `xiaomi/auth_status` | 小米认证 | — |
-| 4 | `xiaomi/auth_url` | 小米认证 | — |
-| 5 | `xiaomi/auth_callback` | 小米认证 | `code` |
-| 6 | `xiaomi/refresh` | 小米设备 | — |
-| 7 | `xiaomi/get_devices` | 小米设备 | — |
-| 8 | `xiaomi/get_area_info` | 小米设备 | — |
-| 9 | `xiaomi/get_device_classes` | 小米设备 | — |
-| 10 | `get_xiaomi_device_properties` | 小米控制 | `deviceId`, `siid`, `piids` |
-| 11 | `set_xiaomi_device_property` | 小米控制 | `deviceId`, `siid`, `piid`, `value` |
-| 12 | `execute_xiaomi_device_action` | 小米控制 | `deviceId`, `siid`, `aiid` |
-| 13 | `xiaomi/scene_list` | 小米场景 | — |
-| 14 | `xiaomi/scene_trigger` | 小米场景 | `sceneId` |
-| 15 | `xiaomi/camera_list` | 摄像头 | — |
-| 16 | `xiaomi/camera_status` | 摄像头 | — |
-| 17 | `xiaomi/camera_connect` | 摄像头 | `camera_id` |
-| 18 | `xiaomi/camera_disconnect` | 摄像头 | `camera_id` |
-| 19 | `xiaomi/camera_snapshot` | 摄像头 | `camera_id` |
+| # | Tool Name | Category | Required Parameters |
+|---|-----------|---------|---------------------|
+| 1 | `device/list` | Common Device | — |
+| 2 | `device/specs` | Common Device | `deviceId` |
+| 3 | `xiaomi/auth_status` | 小米 (Xiaomi) Auth | — |
+| 4 | `xiaomi/auth_url` | Xiaomi Auth | — |
+| 5 | `xiaomi/auth_callback` | Xiaomi Auth | `code` |
+| 6 | `xiaomi/refresh` | Xiaomi Device | — |
+| 7 | `xiaomi/get_devices` | Xiaomi Device | — |
+| 8 | `xiaomi/get_area_info` | Xiaomi Device | — |
+| 9 | `xiaomi/get_device_classes` | Xiaomi Device | — |
+| 10 | `get_xiaomi_device_properties` | Xiaomi Control | `deviceId`, `siid`, `piids` |
+| 11 | `set_xiaomi_device_property` | Xiaomi Control | `deviceId`, `siid`, `piid`, `value` |
+| 12 | `execute_xiaomi_device_action` | Xiaomi Control | `deviceId`, `siid`, `aiid` |
+| 13 | `xiaomi/scene_list` | Xiaomi Scene | — |
+| 14 | `xiaomi/scene_trigger` | Xiaomi Scene | `sceneId` |
+| 15 | `xiaomi/camera_list` | Camera | — |
+| 16 | `xiaomi/camera_status` | Camera | — |
+| 17 | `xiaomi/camera_connect` | Camera | `camera_id` |
+| 18 | `xiaomi/camera_disconnect` | Camera | `camera_id` |
+| 19 | `xiaomi/camera_snapshot` | Camera | `camera_id` |
 | 20 | `xiaomi/camera_vision_chat` | Vision AI | `camera_id`, `query` |
-| 21 | `xiaoai/play_music` | 小爱音箱 | `device_id` |
-| 22 | `xiaoai/tts` | 小爱音箱 | `device_id`, `text` |
-| 23 | `xiaoai/control` | 小爱音箱 | `device_id`, `command` |
-| 24 | `xiaozhi/status` | 小智平台 | — |
-| 25 | `xiaozhi/list` | 小智平台 | — |
-| 26 | `xiaozhi/add` | 小智平台 | `endpoint` |
-| 27 | `xiaozhi/remove` | 小智平台 | `index` |
-| 28 | `xiaozhi/set_endpoint` | 小智平台 | — |
-| 29 | `auth/platforms` | 平台认证 | — |
-| 30 | `auth/tuya_qr` | 涂鸦认证 | `user_code` |
-| 31 | `auth/tuya_qr_status` | 涂鸦认证 | `token`, `user_code` |
-| 32 | `auth/tuya_logout` | 涂鸦认证 | — |
-| 33 | `tuya/refresh` | 涂鸦设备 | — |
-| 34 | `get_tuya_device_properties` | 涂鸦控制 | `deviceId` |
-| 35 | `set_tuya_device_property` | 涂鸦控制 | `deviceId`, `code`, `value` |
-| 36 | `auth/midea_login` | 美的认证 | `account`, `password` |
-| 37 | `auth/midea_logout` | 美的认证 | — |
-| 38 | `midea/refresh` | 美的设备 | — |
-| 39 | `get_midea_device_properties` | 美的控制 | `deviceId` |
-| 40 | `set_midea_device_property` | 美的控制 | `deviceId`, `property`, `value` |
-| 41 | `auth/ewelink_login` | 易微联认证 | `email`, `password` |
-| 42 | `auth/ewelink_logout` | 易微联认证 | — |
-| 43 | `ewelink/refresh` | 易微联设备 | — |
-| 44 | `get_ewelink_device_properties` | 易微联控制 | `deviceId` |
-| 45 | `set_ewelink_device_property` | 易微联控制 | `deviceId`, `property`, `value` |
-| 46 | `trigger/create` | 触发规则 | `name`, `cameras`, `condition` |
-| 47 | `trigger/list` | 触发规则 | — |
-| 48 | `trigger/update` | 触发规则 | `id` |
-| 49 | `trigger/delete` | 触发规则 | `id` |
-| 50 | `trigger/toggle` | 触发规则 | `id`, `enabled` |
-| 51 | `trigger/logs` | 触发规则 | — |
-| 52 | `schedule/add` | 定时任务 | `name`, `scheduled_time`, `tool_name`, `tool_args` |
-| 53 | `schedule/list` | 定时任务 | — |
-| 54 | `schedule/get` | 定时任务 | `id` |
-| 55 | `schedule/update` | 定时任务 | `id` |
-| 56 | `schedule/delete` | 定时任务 | `id` |
-| 57 | `schedule/cancel` | 定时任务 | `id` |
-| 58 | `skill/list` | 技能系统 | — |
-| 59 | `skill/read` | 技能系统 | `name` |
-| 60 | `skill/create` | 技能系统 | `name`, `content` |
-| 61 | `skill/update` | 技能系统 | `name`, `content` |
-| 62 | `skill/delete` | 技能系统 | `name` |
-| 63 | `skill/context` | 技能系统 | — |
-| 64 | `skill/reload` | 技能系统 | — |
-| 65 | `config/get_vision` | 配置管理 | — |
-| 66 | `config/set_vision` | 配置管理 | — |
-| 67 | `config/get_trigger` | 配置管理 | — |
-| 68 | `config/set_trigger` | 配置管理 | — |
-| 69 | `stats/token_usage` | 统计数据 | — |
-| 70 | `stats/token_records` | 统计数据 | — |
-| 71 | `stats/trigger_summary` | 统计数据 | — |
-| 72 | `stats/dashboard` | 统计数据 | — |
-| 73 | `license/status` | 授权管理 | — |
-| 74 | `license/set` | 授权管理 | `license_key` |
-| 75 | `license/clear` | 授权管理 | — |
-| 76 | `gateway/info` | 网关信息 | — |
+| 21 | `xiaoai/play_music` | Xiaoai Speaker | `device_id` |
+| 22 | `xiaoai/tts` | Xiaoai Speaker | `device_id`, `text` |
+| 23 | `xiaoai/control` | Xiaoai Speaker | `device_id`, `command` |
+| 24 | `xiaozhi/status` | Xiaozhi Platform | — |
+| 25 | `xiaozhi/list` | Xiaozhi Platform | — |
+| 26 | `xiaozhi/add` | Xiaozhi Platform | `endpoint` |
+| 27 | `xiaozhi/remove` | Xiaozhi Platform | `index` |
+| 28 | `xiaozhi/set_endpoint` | Xiaozhi Platform | — |
+| 29 | `auth/platforms` | Platform Auth | — |
+| 30 | `auth/tuya_qr` | 涂鸦 (Tuya) Auth | `user_code` |
+| 31 | `auth/tuya_qr_status` | Tuya Auth | `token`, `user_code` |
+| 32 | `auth/tuya_logout` | Tuya Auth | — |
+| 33 | `tuya/refresh` | Tuya Device | — |
+| 34 | `get_tuya_device_properties` | Tuya Control | `deviceId` |
+| 35 | `set_tuya_device_property` | Tuya Control | `deviceId`, `code`, `value` |
+| 36 | `auth/midea_login` | 美的 (Midea) Auth | `account`, `password` |
+| 37 | `auth/midea_logout` | Midea Auth | — |
+| 38 | `midea/refresh` | Midea Device | — |
+| 39 | `get_midea_device_properties` | Midea Control | `deviceId` |
+| 40 | `set_midea_device_property` | Midea Control | `deviceId`, `property`, `value` |
+| 41 | `auth/ewelink_login` | 易微联 (eWeLink) Auth | `email`, `password` |
+| 42 | `auth/ewelink_logout` | eWeLink Auth | — |
+| 43 | `ewelink/refresh` | eWeLink Device | — |
+| 44 | `get_ewelink_device_properties` | eWeLink Control | `deviceId` |
+| 45 | `set_ewelink_device_property` | eWeLink Control | `deviceId`, `property`, `value` |
+| 46 | `trigger/create` | Trigger Rule | `name`, `cameras`, `condition` |
+| 47 | `trigger/list` | Trigger Rule | — |
+| 48 | `trigger/update` | Trigger Rule | `id` |
+| 49 | `trigger/delete` | Trigger Rule | `id` |
+| 50 | `trigger/toggle` | Trigger Rule | `id`, `enabled` |
+| 51 | `trigger/logs` | Trigger Rule | — |
+| 52 | `schedule/add` | Scheduled Task | `name`, `scheduled_time`, `tool_name`, `tool_args` |
+| 53 | `schedule/list` | Scheduled Task | — |
+| 54 | `schedule/get` | Scheduled Task | `id` |
+| 55 | `schedule/update` | Scheduled Task | `id` |
+| 56 | `schedule/delete` | Scheduled Task | `id` |
+| 57 | `schedule/cancel` | Scheduled Task | `id` |
+| 58 | `skill/list` | Skill System | — |
+| 59 | `skill/read` | Skill System | `name` |
+| 60 | `skill/create` | Skill System | `name`, `content` |
+| 61 | `skill/update` | Skill System | `name`, `content` |
+| 62 | `skill/delete` | Skill System | `name` |
+| 63 | `skill/context` | Skill System | — |
+| 64 | `skill/reload` | Skill System | — |
+| 65 | `config/get_vision` | Configuration | — |
+| 66 | `config/set_vision` | Configuration | — |
+| 67 | `config/get_trigger` | Configuration | — |
+| 68 | `config/set_trigger` | Configuration | — |
+| 69 | `stats/token_usage` | Statistics | — |
+| 70 | `stats/token_records` | Statistics | — |
+| 71 | `stats/trigger_summary` | Statistics | — |
+| 72 | `stats/dashboard` | Statistics | — |
+| 73 | `license/status` | License | — |
+| 74 | `license/set` | License | `license_key` |
+| 75 | `license/clear` | License | — |
+| 76 | `gateway/info` | Gateway Info | — |
 
 ---
 
-## 5. 通用设备工具
+## 5. Common Device Tools
 
 ### `device/list`
 
-获取所有已认证平台的设备列表（米家/涂鸦/美的/易微联），支持关键词和平台过滤。
+Get the device list of all authenticated platforms (米家 (Mi Home) / 涂鸦 (Tuya) / 美的 (Midea) / 易微联 (eWeLink)), with keyword and platform filtering.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `platform` | `string` | ❌ | 平台过滤: `xiaomi` / `tuya` / `midea` / `ewelink` |
-| `filter` | `string[]` | ❌ | 关键词过滤数组，匹配设备名称、型号、房间名、家庭名 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `platform` | `string` | ❌ | Platform filter: `xiaomi` / `tuya` / `midea` / `ewelink` |
+| `filter` | `string[]` | ❌ | Keyword filter array, matching device name, model, room name, and home name |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "total": 24,
@@ -348,13 +348,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ### `device/specs`
 
-获取设备的功能规格定义（跨平台统一）。系统自动识别设备所属平台并路由，返回属性列表、Action 定义及参数格式。
+Get the functional specification definition of a device (unified across platforms). The system automatically identifies which platform the device belongs to and routes the request, returning the property list, action definitions, and parameter formats.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Device ID |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "success": true,
@@ -365,19 +365,19 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 6. 小米 (Xiaomi) 平台
+## 6. 小米 (Xiaomi) Platform
 
-**控制流程**: `device/list` → `device/specs`（获取 siid/piid/aiid）→ `set_xiaomi_device_property` 或 `execute_xiaomi_device_action`
+**Control flow**: `device/list` → `device/specs` (obtain siid/piid/aiid) → `set_xiaomi_device_property` or `execute_xiaomi_device_action`
 
-### 6.1 认证
+### 6.1 Authentication
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `xiaomi/auth_status` | 检查米家 OAuth 授权状态及 Token 剩余时间 | — |
-| `xiaomi/auth_url` | 获取米家 OAuth 授权 URL | — |
-| `xiaomi/auth_callback` | 处理米家 OAuth 授权回调 code | `code` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `xiaomi/auth_status` | Check the Mi Home (米家) OAuth authorization status and remaining token lifetime | — |
+| `xiaomi/auth_url` | Get the Mi Home OAuth authorization URL | — |
+| `xiaomi/auth_callback` | Process the Mi Home OAuth authorization callback code | `code` |
 
-**`xiaomi/auth_status` 响应**:
+**`xiaomi/auth_status` response**:
 ```json
 {
   "authorized": true,
@@ -386,7 +386,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/auth_url` 响应**:
+**`xiaomi/auth_url` response**:
 ```json
 {
   "url": "https://account.xiaomi.com/oauth2/authorize?...",
@@ -394,13 +394,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/auth_callback` 参数**:
+**`xiaomi/auth_callback` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `code` | `string` | ✅ | OAuth 授权码 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `code` | `string` | ✅ | OAuth authorization code |
 
-**米家 OAuth 流程**:
+**Mi Home (米家) OAuth flow**:
 
 ```bash
 # 1. 获取授权 URL
@@ -416,16 +416,16 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/auth_callback","arguments":{"code":"CALLBACK_CODE"}}}'
 ```
 
-### 6.2 设备查询
+### 6.2 Device Query
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `xiaomi/refresh` | 从云端重新拉取米家设备列表 | — |
-| `xiaomi/get_devices` | 获取小米设备列表，支持按区域和类别过滤 | — |
-| `xiaomi/get_area_info` | 获取小米智能家居房间/区域列表 | — |
-| `xiaomi/get_device_classes` | 获取当前已导入的小米设备类别列表 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `xiaomi/refresh` | Re-pull the Mi Home device list from the cloud | — |
+| `xiaomi/get_devices` | Get the Xiaomi device list, with filtering by area and category | — |
+| `xiaomi/get_area_info` | Get the Xiaomi Smart Home room/area list | — |
+| `xiaomi/get_device_classes` | Get the list of Xiaomi device categories currently imported | — |
 
-**`xiaomi/refresh` 响应**:
+**`xiaomi/refresh` response**:
 ```json
 {
   "success": true,
@@ -434,14 +434,14 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/get_devices` 参数**:
+**`xiaomi/get_devices` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `area_id` | `string` | ❌ | 区域 ID，从 `xiaomi/get_area_info` 获取 |
-| `device_class` | `string` | ❌ | 设备类别，如 `light`、`switch`、`curtain` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `area_id` | `string` | ❌ | Area ID, obtained from `xiaomi/get_area_info` |
+| `device_class` | `string` | ❌ | Device category, e.g. `light`, `switch`, `curtain` |
 
-**`xiaomi/get_devices` 响应**:
+**`xiaomi/get_devices` response**:
 ```json
 {
   "devices": [
@@ -458,43 +458,43 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 6.3 属性读写
+### 6.3 Property Read/Write
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `get_xiaomi_device_properties` | 获取小米设备属性当前值 | `deviceId`, `siid`, `piids` |
-| `set_xiaomi_device_property` | 设置小米设备属性值 | `deviceId`, `siid`, `piid`, `value` |
-| `execute_xiaomi_device_action` | 执行小米设备动作 | `deviceId`, `siid`, `aiid` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `get_xiaomi_device_properties` | Get the current values of a Xiaomi device's properties | `deviceId`, `siid`, `piids` |
+| `set_xiaomi_device_property` | Set a Xiaomi device property value | `deviceId`, `siid`, `piid`, `value` |
+| `execute_xiaomi_device_action` | Execute a Xiaomi device action | `deviceId`, `siid`, `aiid` |
 
-**`get_xiaomi_device_properties` 参数**:
+**`get_xiaomi_device_properties` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 设备 ID (did) |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Device ID (did) |
 | `siid` | `integer` | ✅ | Service ID |
-| `piids` | `integer[]` | ✅ | Property ID 列表，如 `[1, 2]` |
+| `piids` | `integer[]` | ✅ | Property ID list, e.g. `[1, 2]` |
 
-**`set_xiaomi_device_property` 参数**:
+**`set_xiaomi_device_property` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Device ID |
 | `siid` | `integer` | ✅ | Service ID |
 | `piid` | `integer` | ✅ | Property ID |
-| `value` | `any` | ✅ | 属性值（布尔/数字/字符串） |
+| `value` | `any` | ✅ | Property value (boolean/number/string) |
 
-**响应**: `{"success": true, "data": {...}}`
+**Response**: `{"success": true, "data": {...}}`
 
-**`execute_xiaomi_device_action` 参数**:
+**`execute_xiaomi_device_action` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Device ID |
 | `siid` | `integer` | ✅ | Service ID |
 | `aiid` | `integer` | ✅ | Action ID |
-| `params` | `array` | ❌ | Action 参数列表 |
+| `params` | `array` | ❌ | Action parameter list |
 
-**示例 — 开灯**:
+**Example — turn on the light**:
 
 ```json
 {
@@ -506,38 +506,38 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 6.4 场景
+### 6.4 Scenes
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `xiaomi/scene_list` | 获取小米手动场景列表，返回 sceneId 和名称 | — |
-| `xiaomi/scene_trigger` | 触发执行小米手动场景 | `sceneId` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `xiaomi/scene_list` | Get the list of Xiaomi manual scenes, returning sceneId and name | — |
+| `xiaomi/scene_trigger` | Trigger execution of a Xiaomi manual scene | `sceneId` |
 
-**`xiaomi/scene_trigger` 参数**:
+**`xiaomi/scene_trigger` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `sceneId` | `string` | ✅ | 场景 ID，从 `xiaomi/scene_list` 获取 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `sceneId` | `string` | ✅ | Scene ID, obtained from `xiaomi/scene_list` |
 
-### 6.5 摄像头
+### 6.5 Camera
 
-> 仅支持 macOS 和 Linux。Windows 版本会返回 `{"error": "当前平台不支持摄像头功能"}`。
+> Only macOS and Linux are supported. The Windows build returns `{"error": "当前平台不支持摄像头功能"}`.
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `xiaomi/camera_list` | 获取所有已发现的米家摄像头 | — |
-| `xiaomi/camera_status` | 获取摄像头流连接状态 | — |
-| `xiaomi/camera_connect` | 连接摄像头并开始接收视频流 | `camera_id` |
-| `xiaomi/camera_disconnect` | 停止流并断开连接 | `camera_id` |
-| `xiaomi/camera_snapshot` | 抓取摄像头 JPEG 截图 | `camera_id` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `xiaomi/camera_list` | Get all discovered Mi Home cameras | — |
+| `xiaomi/camera_status` | Get the camera stream connection status | — |
+| `xiaomi/camera_connect` | Connect a camera and start receiving the video stream | `camera_id` |
+| `xiaomi/camera_disconnect` | Stop the stream and disconnect | `camera_id` |
+| `xiaomi/camera_snapshot` | Capture a JPEG snapshot from the camera | `camera_id` |
 
-**`xiaomi/camera_list` 参数**:
+**`xiaomi/camera_list` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `filter` | `string[]` | ❌ | 关键词过滤数组（匹配名称/型号/房间） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `filter` | `string[]` | ❌ | Keyword filter array (matches name/model/room) |
 
-**`xiaomi/camera_list` 响应**:
+**`xiaomi/camera_list` response**:
 ```json
 {
   "cameras": [
@@ -556,13 +556,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/camera_status` 参数**:
+**`xiaomi/camera_status` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `camera_id` | `string` | ❌ | 摄像头 DID，不传则返回所有已连接摄像头状态 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `camera_id` | `string` | ❌ | Camera DID; when omitted, returns the status of all connected cameras |
 
-**`xiaomi/camera_status` 响应** (指定 camera_id):
+**`xiaomi/camera_status` response** (with camera_id specified):
 ```json
 {
   "did": "102838844",
@@ -572,13 +572,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/camera_connect` 参数**:
+**`xiaomi/camera_connect` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `camera_id` | `string` | ✅ | 摄像头设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `camera_id` | `string` | ✅ | Camera device ID |
 
-**`xiaomi/camera_connect` 响应**:
+**`xiaomi/camera_connect` response**:
 ```json
 {
   "camera_id": "102838844",
@@ -588,24 +588,24 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-> 连接为异步操作，服务器会等待最多 3 秒轮询连接状态。若超时返回 `"Connection initiated, current status: connecting. Status will update via polling."`。
+> Connecting is asynchronous: the server polls the connection status for up to 3 seconds. On timeout it returns `"Connection initiated, current status: connecting. Status will update via polling."`.
 
-**`xiaomi/camera_disconnect` 参数**:
+**`xiaomi/camera_disconnect` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `camera_id` | `string` | ✅ | 摄像头设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `camera_id` | `string` | ✅ | Camera device ID |
 
-**`xiaomi/camera_snapshot` 参数**:
+**`xiaomi/camera_snapshot` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `camera_id` | `string` | ✅ | 摄像头设备 ID |
-| `channel` | `integer` | ❌ | 通道号，默认 `0` |
-| `count` | `integer` | ❌ | 截图帧数，默认 `1`，最大 `10` |
-| `use_subprocess` | `boolean` | ❌ | 强制子进程模式（进程隔离防挂死），默认 `false` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `camera_id` | `string` | ✅ | Camera device ID |
+| `channel` | `integer` | ❌ | Channel number, default `0` |
+| `count` | `integer` | ❌ | Number of snapshot frames, default `1`, max `10` |
+| `use_subprocess` | `boolean` | ❌ | Force subprocess mode (process isolation to prevent hangs), default `false` |
 
-**`xiaomi/camera_snapshot` 响应** (缓冲区模式):
+**`xiaomi/camera_snapshot` response** (buffered mode):
 ```json
 {
   "camera_id": "102838844",
@@ -622,7 +622,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`xiaomi/camera_snapshot` 响应** (子进程模式):
+**`xiaomi/camera_snapshot` response** (subprocess mode):
 ```json
 {
   "camera_id": "102838844",
@@ -639,9 +639,9 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-> **模式说明**: 默认优先从已连接的帧缓冲区读取；若缓冲区为空或指定 `use_subprocess=true`，则启动独立子进程连接摄像头抓拍，避免原生库挂死影响主服务。
+> **Mode notes**: by default it reads from the connected frame buffer first; if the buffer is empty or `use_subprocess=true` is specified, it launches a separate subprocess that connects to the camera and captures the snapshot, so that a hang in the native library cannot affect the main service.
 
-**摄像头使用流程**:
+**Camera usage flow**:
 
 ```bash
 # 1. 查找摄像头
@@ -667,41 +667,41 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 7. 涂鸦 (Tuya) 平台
+## 7. 涂鸦 (Tuya) Platform
 
-> 设置设备属性 (`set_tuya_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
+> Setting a device property (`set_tuya_device_property`) requires the platform account to be authorized and logged in (available within the free edition's 90-day trial; a licensed edition is required once it expires).
 
-### 授权（QR 码扫描）
+### Authorization (QR code scan)
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `auth/tuya_qr` | 获取涂鸦 QR 码授权，返回 qr_url 和 token | `user_code` |
-| `auth/tuya_qr_status` | 查询 QR 码扫码授权状态 | `token`, `user_code` |
-| `auth/tuya_logout` | 退出涂鸦平台授权 | — |
-| `tuya/refresh` | 刷新涂鸦设备列表（授权后调用） | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `auth/tuya_qr` | Get the Tuya QR code authorization, returning qr_url and token | `user_code` |
+| `auth/tuya_qr_status` | Query the QR code scan authorization status | `token`, `user_code` |
+| `auth/tuya_logout` | Log out of the Tuya platform authorization | — |
+| `tuya/refresh` | Refresh the Tuya device list (call after authorization) | — |
 
-**QR 码授权流程**:
+**QR code authorization flow**:
 
-1. 在涂鸦智能 / Smart Life App 中获取用户代码：**我的 → 设置 → 账号与安全**
-2. 调用 `auth/tuya_qr` 传入 `user_code`，获取 `qr_url` 和 `token`（有效期 5 分钟）
-3. 将 `qr_url` 转为二维码，用涂鸦 App 扫描并确认
-4. 轮询 `auth/tuya_qr_status`，返回 `"status": "success"` 表示授权成功
-5. 调用 `tuya/refresh` 同步设备
+1. In the 涂鸦智能 (Smart Life) app, obtain the user code: **My → Settings → Account and Security**
+2. Call `auth/tuya_qr` with `user_code` to obtain `qr_url` and `token` (valid for 5 minutes)
+3. Turn `qr_url` into a QR code, scan it with the Tuya app, and confirm
+4. Poll `auth/tuya_qr_status`; a result of `"status": "success"` means the authorization succeeded
+5. Call `tuya/refresh` to sync the devices
 
-**`auth/tuya_qr` 参数**:
+**`auth/tuya_qr` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `user_code` | `string` | ✅ | 涂鸦 App 中的用户代码 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `user_code` | `string` | ✅ | User code from the Tuya app |
 
-**`auth/tuya_qr_status` 参数**:
+**`auth/tuya_qr_status` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `token` | `string` | ✅ | `auth/tuya_qr` 返回的 token |
-| `user_code` | `string` | ✅ | 涂鸦用户代码 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `token` | `string` | ✅ | The token returned by `auth/tuya_qr` |
+| `user_code` | `string` | ✅ | Tuya user code |
 
-**`tuya/refresh` 响应**:
+**`tuya/refresh` response**:
 ```json
 {
   "success": true,
@@ -709,28 +709,28 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 设备控制
+### Device Control
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `get_tuya_device_properties` | 获取涂鸦设备所有 DP 属性值 | `deviceId` |
-| `set_tuya_device_property` | 设置涂鸦设备 DP 属性值（需授权） | `deviceId`, `code`, `value` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `get_tuya_device_properties` | Get all DP property values of a Tuya device | `deviceId` |
+| `set_tuya_device_property` | Set a Tuya device DP property value (requires authorization) | `deviceId`, `code`, `value` |
 
-**`get_tuya_device_properties` 参数**:
+**`get_tuya_device_properties` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 涂鸦设备 ID |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Tuya device ID |
 
-**`set_tuya_device_property` 参数**:
+**`set_tuya_device_property` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 涂鸦设备 ID |
-| `code` | `string` | ✅ | DP 功能点 code（如 `switch_1`, `bright_value`） |
-| `value` | `any` | ✅ | 属性值（boolean/number/string） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Tuya device ID |
+| `code` | `string` | ✅ | DP function point code (e.g. `switch_1`, `bright_value`) |
+| `value` | `any` | ✅ | Property value (boolean/number/string) |
 
-**`set_tuya_device_property` 响应**:
+**`set_tuya_device_property` response**:
 ```json
 {
   "success": true,
@@ -741,27 +741,27 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 8. 美的 (Midea) 平台
+## 8. 美的 (Midea) Platform
 
-> 设置设备属性 (`set_midea_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
+> Setting a device property (`set_midea_device_property`) requires the platform account to be authorized and logged in (available within the free edition's 90-day trial; a licensed edition is required once it expires).
 
-### 授权（账号密码）
+### Authorization (account and password)
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `auth/midea_login` | 美的账号密码登录（美居/MSmartHome） | `account`, `password` |
-| `auth/midea_logout` | 退出美的平台授权 | — |
-| `midea/refresh` | 刷新美的设备列表 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `auth/midea_login` | Midea account/password login (美居 (Midea Smart Home) / MSmartHome) | `account`, `password` |
+| `auth/midea_logout` | Log out of the Midea platform authorization | — |
+| `midea/refresh` | Refresh the Midea device list | — |
 
-**`auth/midea_login` 参数**:
+**`auth/midea_login` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `account` | `string` | ✅ | 手机号或邮箱 |
-| `password` | `string` | ✅ | 账号密码 |
-| `cloud` | `string` | ❌ | 云端类型: `meiju`（美居，默认）或 `msmart`（MSmartHome） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `account` | `string` | ✅ | Mobile number or email address |
+| `password` | `string` | ✅ | Account password |
+| `cloud` | `string` | ❌ | Cloud type: `meiju` (Midea Smart Home, default) or `msmart` (MSmartHome) |
 
-**`auth/midea_login` 响应**:
+**`auth/midea_login` response**:
 ```json
 {
   "success": true,
@@ -770,7 +770,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**`midea/refresh` 响应**:
+**`midea/refresh` response**:
 ```json
 {
   "success": true,
@@ -778,28 +778,28 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 设备控制
+### Device Control
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `get_midea_device_properties` | 获取美的设备所有属性值 | `deviceId` |
-| `set_midea_device_property` | 设置美的设备属性值（需授权） | `deviceId`, `property`, `value` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `get_midea_device_properties` | Get all property values of a Midea device | `deviceId` |
+| `set_midea_device_property` | Set a Midea device property value (requires authorization) | `deviceId`, `property`, `value` |
 
-**`get_midea_device_properties` 参数**:
+**`get_midea_device_properties` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 美的设备 ID (applianceCode) |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Midea device ID (applianceCode) |
 
-**`set_midea_device_property` 参数**:
+**`set_midea_device_property` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 美的设备 ID (applianceCode) |
-| `property` | `string` | ✅ | 属性名（如 `power`, `temperature`, `mode`, `fan_speed`） |
-| `value` | `any` | ✅ | 属性值 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | Midea device ID (applianceCode) |
+| `property` | `string` | ✅ | Property name (e.g. `power`, `temperature`, `mode`, `fan_speed`) |
+| `value` | `any` | ✅ | Property value |
 
-**`set_midea_device_property` 响应**:
+**`set_midea_device_property` response**:
 ```json
 {
   "success": true,
@@ -808,35 +808,35 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-**常用属性值参考**:
-- `power`: `0` / `1`（关/开）
-- `temperature`: 整数（如 `26`）
+**Common property values**:
+- `power`: `0` / `1` (off/on)
+- `temperature`: integer (e.g. `26`)
 - `mode`: `cool` / `heat` / `auto`
 - `fan_speed`: `low` / `medium` / `high`
 
 ---
 
-## 9. 易微联 (eWeLink) 平台
+## 9. 易微联 (eWeLink) Platform
 
-> 设置设备属性 (`set_ewelink_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
+> Setting a device property (`set_ewelink_device_property`) requires the platform account to be authorized and logged in (available within the free edition's 90-day trial; a licensed edition is required once it expires).
 
-### 授权（账号密码）
+### Authorization (account and password)
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `auth/ewelink_login` | 易微联账号密码登录 | `email`, `password` |
-| `auth/ewelink_logout` | 退出易微联平台授权 | — |
-| `ewelink/refresh` | 刷新易微联设备列表 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `auth/ewelink_login` | eWeLink account/password login | `email`, `password` |
+| `auth/ewelink_logout` | Log out of the eWeLink platform authorization | — |
+| `ewelink/refresh` | Refresh the eWeLink device list | — |
 
-**`auth/ewelink_login` 参数**:
+**`auth/ewelink_login` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `email` | `string` | ✅ | 邮箱或手机号 |
-| `password` | `string` | ✅ | 账号密码 |
-| `country_code` | `string` | ❌ | 国家代码，默认 `+86` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `email` | `string` | ✅ | Email address or mobile number |
+| `password` | `string` | ✅ | Account password |
+| `country_code` | `string` | ❌ | Country code, default `+86` |
 
-**`auth/ewelink_login` 响应**:
+**`auth/ewelink_login` response**:
 ```json
 {
   "success": true,
@@ -845,73 +845,73 @@ curl -s -X POST http://localhost:38080/mcp/http \
 }
 ```
 
-### 设备控制
+### Device Control
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `get_ewelink_device_properties` | 获取易微联设备所有属性值 | `deviceId` |
-| `set_ewelink_device_property` | 设置易微联设备属性值（需授权） | `deviceId`, `property`, `value` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `get_ewelink_device_properties` | Get all property values of an eWeLink device | `deviceId` |
+| `set_ewelink_device_property` | Set an eWeLink device property value (requires authorization) | `deviceId`, `property`, `value` |
 
-**`set_ewelink_device_property` 参数**:
+**`set_ewelink_device_property` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `deviceId` | `string` | ✅ | 易微联设备 ID |
-| `property` | `string` | ✅ | 属性名（如 `switch`, `switches`） |
-| `value` | `any` | ✅ | 属性值（boolean/string/array） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `deviceId` | `string` | ✅ | eWeLink device ID |
+| `property` | `string` | ✅ | Property name (e.g. `switch`, `switches`) |
+| `value` | `any` | ✅ | Property value (boolean/string/array) |
 
-**常用属性**:
+**Common properties**:
 - `switch`: `on` / `off`
-- `switches`: JSON 数组，如 `[{"switch": "on", "outlet": 0}]`（多路开关）
+- `switches`: JSON array, e.g. `[{"switch": "on", "outlet": 0}]` (multi-channel switch)
 
 ---
 
-## 10. 小爱音箱控制
+## 10. Xiaoai Speaker Control
 
-> 使用前先通过 `device/list` 获取音箱 `device_id`（model 以 `xiaomi.wifispeaker` 开头）。
+> Before use, obtain the speaker's `device_id` via `device/list` (the model starts with `xiaomi.wifispeaker`).
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `xiaoai/play_music` | 控制小爱音箱播放音乐/故事/调整音量 | `device_id` |
-| `xiaoai/tts` | 通过小爱音箱朗读文本（TTS 语音播报） | `device_id`, `text` |
-| `xiaoai/control` | 通过小爱音箱语音指令间接控制设备 | `device_id`, `command` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `xiaoai/play_music` | Control a Xiaoai speaker to play music/stories or adjust the volume | `device_id` |
+| `xiaoai/tts` | Read text aloud through the Xiaoai speaker (TTS speech broadcast) | `device_id`, `text` |
+| `xiaoai/control` | Indirectly control devices via Xiaoai speaker voice commands | `device_id`, `command` |
 
-**`xiaoai/play_music` 参数**:
+**`xiaoai/play_music` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `device_id` | `string` | ✅ | 音箱设备 ID |
-| `text` | `string` | ⚠️ | 自然语言指令（如"播放刘德华的歌"、"讲个笑话"、"音量调到50"） |
-| `command` | `string` | ⚠️ | `text` 的别名，两者等价。`text` 与 `command` 至少传一个 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `device_id` | `string` | ✅ | Speaker device ID |
+| `text` | `string` | ⚠️ | Natural-language instruction (e.g. "播放刘德华的歌" = play a Andy Lau song, "讲个笑话" = tell a joke, "音量调到50" = set the volume to 50) |
+| `command` | `string` | ⚠️ | An alias for `text`; the two are equivalent. At least one of `text` and `command` must be passed |
 
-**`xiaoai/tts` 参数**:
+**`xiaoai/tts` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `device_id` | `string` | ✅ | 音箱设备 ID |
-| `text` | `string` | ✅ | 播报文本内容 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `device_id` | `string` | ✅ | Speaker device ID |
+| `text` | `string` | ✅ | Text content to broadcast |
 
-**`xiaoai/control` 参数**:
+**`xiaoai/control` parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `device_id` | `string` | ✅ | 音箱设备 ID |
-| `command` | `string` | ✅ | 语音指令（如"打开客厅灯"、"调高空调温度"） |
-| `silence` | `boolean` | ❌ | 静默执行（音箱不语音回复），默认 `true` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `device_id` | `string` | ✅ | Speaker device ID |
+| `command` | `string` | ✅ | Voice command (e.g. "打开客厅灯" = turn on the living room light, "调高空调温度" = raise the air conditioner temperature) |
+| `silence` | `boolean` | ❌ | Execute silently (the speaker gives no spoken reply), default `true` |
 
 ---
 
-## 11. 小智平台
+## 11. Xiaozhi Platform
 
-FeyaGate 支持多个并行小智 AI WebSocket 连接。
+FeyaGate supports multiple parallel Xiaozhi AI WebSocket connections.
 
 ### `xiaozhi/status`
 
-获取所有小智平台连接状态。
+Get the connection status of all Xiaozhi platform endpoints.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "state": "connected",
@@ -937,19 +937,19 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `xiaozhi/list`
 
-列出所有已配置的小智连接端点及状态。
+List all configured Xiaozhi connection endpoints and their status.
 
-**参数**: 无
+**Parameters**: none
 
 ### `xiaozhi/add`
 
-添加一个新的小智平台 WebSocket 连接。
+Add a new Xiaozhi platform WebSocket connection.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `endpoint` | `string` | ✅ | WebSocket URL（`ws://` 或 `wss://`） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `endpoint` | `string` | ✅ | WebSocket URL (`ws://` or `wss://`) |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "success": true,
@@ -961,31 +961,31 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `xiaozhi/remove`
 
-删除指定索引的小智连接。
+Delete the Xiaozhi connection at the specified index.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `index` | `integer` | ✅ | 连接索引（从 `xiaozhi/list` 获取） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `index` | `integer` | ✅ | Connection index (obtained from `xiaozhi/list`) |
 
 ### `xiaozhi/set_endpoint`
 
-设置第一个小智端点（向后兼容接口）。
+Set the first Xiaozhi endpoint (backward-compatible interface).
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `endpoint` | `string` | ❌ | WebSocket URL，留空则禁用并删除 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `endpoint` | `string` | ❌ | WebSocket URL; leave empty to disable and delete it |
 
 ---
 
-## 12. 认证与平台管理
+## 12. Authentication and Platform Management
 
 ### `auth/platforms`
 
-列出所有已注册的智能家居平台及认证状态。
+List all registered smart home platforms and their authentication status.
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 [
   { "platform_id": "xiaomi", "platform_name": "米家", "authenticated": true, "auth_status": { "authorized": true, "cloud_server": "cn", "token_remaining_seconds": 233266 } },
@@ -1001,18 +1001,18 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `xiaomi/camera_vision_chat`
 
-向 Vision AI 提问摄像头画面内容。发送摄像头最近几帧图像和用户问题给 LLM，返回 AI 分析结果。
+Ask Vision AI a question about the camera feed. Sends the camera's most recent frames together with the user's question to the LLM and returns the AI analysis result.
 
-> 需先在 `config.yaml` 中配置 `vision.enabled=true` 和 `api_key`。
+> You must first configure `vision.enabled=true` and `api_key` in `config.yaml`.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `camera_id` | `string` | ✅ | 摄像头设备 DID |
-| `query` | `string` | ✅ | 向 AI 提出的问题（如"现在有几个人？"） |
-| `channel` | `integer` | ❌ | 摄像头通道，默认 `0` |
-| `count` | `integer` | ❌ | 发送最近几帧，默认 `3`，最大 `10` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `camera_id` | `string` | ✅ | Camera device DID |
+| `query` | `string` | ✅ | The question asked of the AI (e.g. "How many people are there right now?") |
+| `channel` | `integer` | ❌ | Camera channel, default `0` |
+| `count` | `integer` | ❌ | Number of most recent frames to send, default `3`, max `10` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "camera_id": "102838844",
@@ -1030,31 +1030,31 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ---
 
-## 14. 触发规则
+## 14. Trigger Rules
 
-触发引擎监控摄像头画面，当满足自然语言描述的条件时自动执行智能家居动作。
+The trigger engine monitors camera feeds and automatically executes smart home actions when a condition described in natural language is met.
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `trigger/create` | 创建摄像头触发规则 | `name`, `cameras`, `condition` |
-| `trigger/list` | 列出所有触发规则 | — |
-| `trigger/update` | 更新触发规则 | `id` |
-| `trigger/delete` | 删除触发规则 | `id` |
-| `trigger/toggle` | 启用或禁用触发规则 | `id`, `enabled` |
-| `trigger/logs` | 查看触发规则执行日志 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `trigger/create` | Create a camera trigger rule | `name`, `cameras`, `condition` |
+| `trigger/list` | List all trigger rules | — |
+| `trigger/update` | Update a trigger rule | `id` |
+| `trigger/delete` | Delete a trigger rule | `id` |
+| `trigger/toggle` | Enable or disable a trigger rule | `id`, `enabled` |
+| `trigger/logs` | View the execution log of trigger rules | — |
 
 ### `trigger/create`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | `string` | ✅ | 规则名称 |
-| `cameras` | `string[]` | ✅ | 关联摄像头 DID 列表 |
-| `condition` | `string` | ✅ | 自然语言触发条件（如"有人进入客厅"） |
-| `actions` | `array` | ❌ | 触发时执行的动作列表 |
-| `notify` | `object` | ❌ | 通知配置 `{title, body}` |
-| `filter` | `object` | ❌ | 过滤器 `{interval, period}` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Rule name |
+| `cameras` | `string[]` | ✅ | List of associated camera DIDs |
+| `condition` | `string` | ✅ | Natural-language trigger condition (e.g. "someone enters the living room") |
+| `actions` | `array` | ❌ | List of actions to execute when triggered |
+| `notify` | `object` | ❌ | Notification configuration `{title, body}` |
+| `filter` | `object` | ❌ | Filter `{interval, period}` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "id": "rule_001",
@@ -1065,56 +1065,56 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `trigger/update`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | `string` | ✅ | 规则 ID |
-| `name` | `string` | ❌ | 新名称 |
-| `cameras` | `string[]` | ❌ | 新摄像头列表 |
-| `condition` | `string` | ❌ | 新触发条件 |
-| `actions` | `array` | ❌ | 新动作列表 |
-| `notify` | `object` | ❌ | 新通知配置 |
-| `filter` | `object` | ❌ | 新过滤器 |
-| `enabled` | `boolean` | ❌ | 启用/禁用 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `id` | `string` | ✅ | Rule ID |
+| `name` | `string` | ❌ | New name |
+| `cameras` | `string[]` | ❌ | New camera list |
+| `condition` | `string` | ❌ | New trigger condition |
+| `actions` | `array` | ❌ | New action list |
+| `notify` | `object` | ❌ | New notification configuration |
+| `filter` | `object` | ❌ | New filter |
+| `enabled` | `boolean` | ❌ | Enable/disable |
 
 ### `trigger/toggle`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | `string` | ✅ | 规则 ID |
-| `enabled` | `boolean` | ✅ | `true` 启用，`false` 禁用 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `id` | `string` | ✅ | Rule ID |
+| `enabled` | `boolean` | ✅ | `true` enables, `false` disables |
 
 ### `trigger/logs`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `limit` | `integer` | ❌ | 返回条数限制，默认 `50` |
-| `rule_id` | `string` | ❌ | 按规则 ID 过滤 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `limit` | `integer` | ❌ | Maximum number of entries returned, default `50` |
+| `rule_id` | `string` | ❌ | Filter by rule ID |
 
 ---
 
-## 15. 定时任务
+## 15. Scheduled Tasks
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `schedule/add` | 创建定时任务，到时自动执行指定 MCP 工具 | `name`, `scheduled_time`, `tool_name`, `tool_args` |
-| `schedule/list` | 列出定时任务，可按状态筛选 | — |
-| `schedule/get` | 获取定时任务详情 | `id` |
-| `schedule/update` | 修改任务（仅 pending 状态可修改） | `id` |
-| `schedule/delete` | 删除定时任务 | `id` |
-| `schedule/cancel` | 取消待执行任务（保留记录，状态变为 cancelled） | `id` |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `schedule/add` | Create a scheduled task that automatically runs a given MCP tool when its time arrives | `name`, `scheduled_time`, `tool_name`, `tool_args` |
+| `schedule/list` | List scheduled tasks, optionally filtered by status | — |
+| `schedule/get` | Get the details of a scheduled task | `id` |
+| `schedule/update` | Modify a task (only tasks in the pending state can be modified) | `id` |
+| `schedule/delete` | Delete a scheduled task | `id` |
+| `schedule/cancel` | Cancel a task that has not run yet (the record is kept and its state becomes cancelled) | `id` |
 
 ### `schedule/add`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | `string` | ✅ | 任务名称 |
-| `scheduled_time` | `string` | ✅ | 执行时间，ISO 8601 格式（如 `2026-05-24T22:00:00+08:00`） |
-| `tool_name` | `string` | ✅ | 要执行的 MCP 工具名（如 `set_xiaomi_device_property`） |
-| `tool_args` | `string` | ✅ | 工具参数 JSON 字符串 |
-| `repeat` | `string` | ❌ | 重复类型: `none` / `daily` / `weekdays` / `weekends` / `weekly` / `custom` |
-| `repeat_days` | `string` | ❌ | 自定义重复天 JSON 数组字符串，如 `"[1,2,3,4,5]"`（0=周日） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Task name |
+| `scheduled_time` | `string` | ✅ | Execution time in ISO 8601 format (e.g. `2026-05-24T22:00:00+08:00`) |
+| `tool_name` | `string` | ✅ | Name of the MCP tool to execute (e.g. `set_xiaomi_device_property`) |
+| `tool_args` | `string` | ✅ | Tool arguments as a JSON string |
+| `repeat` | `string` | ❌ | Repeat type: `none` / `daily` / `weekdays` / `weekends` / `weekly` / `custom` |
+| `repeat_days` | `string` | ❌ | Custom repeat days as a JSON array string, e.g. `"[1,2,3,4,5]"` (0 = Sunday) |
 
-**示例 — 每天晚上 10 点关灯**:
+**Example — turn the lights off at 10 p.m. every day**:
 
 ```json
 {
@@ -1134,46 +1134,46 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `schedule/list`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `status` | `string` | ❌ | 状态过滤: `pending` / `completed` / `cancelled`，留空返回全部 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `status` | `string` | ❌ | Status filter: `pending` / `completed` / `cancelled`; leave empty to return all |
 
 ### `schedule/get` / `schedule/delete` / `schedule/cancel`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | `integer` | ✅ | 任务 ID（整数） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `id` | `integer` | ✅ | Task ID (integer) |
 
 ### `schedule/update`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | `integer` | ✅ | 任务 ID（整数） |
-| `scheduled_time` | `string` | ❌ | 新执行时间 ISO 8601 |
-| `repeat` | `string` | ❌ | 新重复类型 |
-| `repeat_days` | `string` | ❌ | 自定义重复天 JSON 数组字符串 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `id` | `integer` | ✅ | Task ID (integer) |
+| `scheduled_time` | `string` | ❌ | New execution time in ISO 8601 |
+| `repeat` | `string` | ❌ | New repeat type |
+| `repeat_days` | `string` | ❌ | Custom repeat days as a JSON array string |
 
 ---
 
-## 16. 技能系统
+## 16. Skill System
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `skill/list` | 列出所有技能，可按来源过滤 | — |
-| `skill/read` | 读取指定技能的完整内容（含 frontmatter） | `name` |
-| `skill/create` | 创建新的自定义技能 | `name`, `content` |
-| `skill/update` | 更新已有自定义技能的内容 | `name`, `content` |
-| `skill/delete` | 删除指定自定义技能（内置技能不可删除） | `name` |
-| `skill/context` | 获取所有常驻技能的上下文内容和技能摘要 | — |
-| `skill/reload` | 重新扫描技能目录并刷新缓存 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `skill/list` | List all skills, optionally filtered by source | — |
+| `skill/read` | Read the full content of a given skill (including frontmatter) | `name` |
+| `skill/create` | Create a new custom skill | `name`, `content` |
+| `skill/update` | Update the content of an existing custom skill | `name`, `content` |
+| `skill/delete` | Delete a given custom skill (built-in skills cannot be deleted) | `name` |
+| `skill/context` | Get the context content and summaries of all always-on skills | — |
+| `skill/reload` | Rescan the skill directory and refresh the cache | — |
 
 ### `skill/list`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `source` | `string` | ❌ | 来源过滤: `all`（默认）/ `builtin` / `user` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `source` | `string` | ❌ | Source filter: `all` (default) / `builtin` / `user` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "skills": [
@@ -1192,11 +1192,11 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `skill/read`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | `string` | ✅ | 技能名称 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Skill name |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "name": "smart_light",
@@ -1212,22 +1212,22 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `skill/create` / `skill/update`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | `string` | ✅ | 技能名称（字母数字和连字符） |
-| `content` | `string` | ✅ | 技能内容（Markdown + YAML frontmatter 格式） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Skill name (letters, digits, and hyphens) |
+| `content` | `string` | ✅ | Skill content (Markdown + YAML frontmatter format) |
 
 ### `skill/delete`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | `string` | ✅ | 技能名称（内置技能不可删除） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Skill name (built-in skills cannot be deleted) |
 
 ### `skill/context`
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "context": "...",
@@ -1237,9 +1237,9 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `skill/reload`
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "success": true,
@@ -1249,18 +1249,18 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ---
 
-## 17. 配置管理
+## 17. Configuration Management
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `config/get_vision` | 获取 Vision AI 当前配置（API Key 脱敏显示） | — |
-| `config/set_vision` | 更新 Vision AI 配置并保存到 `config.yaml`，修改后立即生效 | — |
-| `config/get_trigger` | 获取触发引擎当前配置 | — |
-| `config/set_trigger` | 更新触发引擎配置并保存到 `config.yaml`，修改后立即生效 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `config/get_vision` | Get the current Vision AI configuration (the API Key is shown masked) | — |
+| `config/set_vision` | Update the Vision AI configuration and save it to `config.yaml`; changes take effect immediately | — |
+| `config/get_trigger` | Get the current trigger engine configuration | — |
+| `config/set_trigger` | Update the trigger engine configuration and save it to `config.yaml`; changes take effect immediately | — |
 
 ### `config/get_vision`
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "enabled": true,
@@ -1276,19 +1276,19 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `config/set_vision`
 
-所有参数可选，仅传入需要修改的字段。
+All parameters are optional; pass only the fields you want to change.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `enabled` | `boolean` | ❌ | 是否启用 Vision AI |
-| `api_key` | `string` | ❌ | Vision AI API 密钥 |
-| `base_url` | `string` | ❌ | OpenAI 兼容 API 端点 |
-| `model` | `string` | ❌ | 模型名称 |
-| `temperature` | `number` | ❌ | 温度参数 (0-2) |
-| `max_tokens` | `integer` | ❌ | 最大响应 Token 数 |
-| `timeout_seconds` | `integer` | ❌ | HTTP 超时秒数 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `enabled` | `boolean` | ❌ | Whether Vision AI is enabled |
+| `api_key` | `string` | ❌ | Vision AI API key |
+| `base_url` | `string` | ❌ | OpenAI-compatible API endpoint |
+| `model` | `string` | ❌ | Model name |
+| `temperature` | `number` | ❌ | Temperature parameter (0-2) |
+| `max_tokens` | `integer` | ❌ | Maximum number of response tokens |
+| `timeout_seconds` | `integer` | ❌ | HTTP timeout in seconds |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "success": true,
@@ -1306,7 +1306,7 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `config/get_trigger`
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "enabled": true,
@@ -1320,35 +1320,35 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `config/set_trigger`
 
-所有参数可选，仅传入需要修改的字段。启用/禁用会自动启停引擎。
+All parameters are optional; pass only the fields you want to change. Enabling/disabling automatically starts or stops the engine.
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `enabled` | `boolean` | ❌ | 是否启用触发引擎 |
-| `interval_seconds` | `integer` | ❌ | 规则检查间隔（秒） |
-| `vision_img_count` | `integer` | ❌ | 每次 LLM 调用使用的帧数 |
-| `motion_threshold` | `integer` | ❌ | dHash 运动检测阈值 |
-| `log_ttl_days` | `integer` | ❌ | 日志保留天数 |
-| `min_trigger_interval` | `integer` | ❌ | 单规则最小触发间隔（秒，防抖） |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `enabled` | `boolean` | ❌ | Whether the trigger engine is enabled |
+| `interval_seconds` | `integer` | ❌ | Rule check interval (seconds) |
+| `vision_img_count` | `integer` | ❌ | Number of frames used per LLM call |
+| `motion_threshold` | `integer` | ❌ | dHash motion detection threshold |
+| `log_ttl_days` | `integer` | ❌ | Number of days logs are kept |
+| `min_trigger_interval` | `integer` | ❌ | Minimum trigger interval for a single rule (seconds, debounce) |
 
 ---
 
-## 18. 统计数据
+## 18. Statistics
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `stats/token_usage` | 获取 Token 消耗统计（按天/按模型/按来源/总览） | — |
-| `stats/token_records` | 获取最近的 LLM API 调用记录 | — |
-| `stats/trigger_summary` | 获取触发事件聚合统计（每日趋势、规则排名、摄像头分布、热力图） | — |
-| `stats/dashboard` | 获取综合看板摘要（系统状态、今日概览） | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `stats/token_usage` | Get token consumption statistics (by day / by model / by source / overall) | — |
+| `stats/token_records` | Get recent LLM API call records | — |
+| `stats/trigger_summary` | Get aggregated trigger event statistics (daily trend, rule ranking, camera distribution, heatmap) | — |
+| `stats/dashboard` | Get the overall dashboard summary (system status, today's overview) | — |
 
 ### `stats/token_usage`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `days` | `integer` | ❌ | 统计最近多少天，默认 `30` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `days` | `integer` | ❌ | Number of recent days to include in the statistics, default `30` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "summary": { "total_tokens": 150000, "total_calls": 300 },
@@ -1360,11 +1360,11 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `stats/token_records`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `limit` | `integer` | ❌ | 返回记录数，默认 `50` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `limit` | `integer` | ❌ | Number of records returned, default `50` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "records": [ ... ]
@@ -1373,11 +1373,11 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `stats/trigger_summary`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `days` | `integer` | ❌ | 统计最近多少天，默认 `30` |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `days` | `integer` | ❌ | Number of recent days to include in the statistics, default `30` |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "overview": {
@@ -1396,9 +1396,9 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ### `stats/dashboard`
 
-**参数**: 无
+**Parameters**: none
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "trigger_engine": {
@@ -1422,19 +1422,19 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ---
 
-## 19. 授权码管理
+## 19. License Key Management
 
-FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免费试用（试用期内可用，期满需授权版解锁）；授权版解锁全部平台且无时限，并开启 Vision/Trigger。
+FeyaGate free edition: 米家 (Mi Home) is permanently available, while 涂鸦 (Tuya) / 美的 (Midea) / 易微联 (eWeLink) each get a 90-day free trial (usable within the trial period; a licensed edition is required to unlock them once it ends); the licensed edition unlocks all platforms with no time limit and enables Vision/Trigger.
 
-| 工具名 | 说明 | 必填参数 |
-|--------|------|----------|
-| `license/status` | 获取虚拟网关授权状态 | — |
-| `license/set` | 写入授权码并触发云端激活 | `license_key` |
-| `license/clear` | 清除授权码，恢复免费版 | — |
+| Tool Name | Description | Required Parameters |
+|-----------|-------------|---------------------|
+| `license/status` | Get the virtual gateway license status | — |
+| `license/set` | Write the license key and trigger cloud activation | `license_key` |
+| `license/clear` | Clear the license key and revert to the free edition | — |
 
 ### `license/status`
 
-**响应示例** (已授权):
+**Response example** (licensed):
 ```json
 {
   "edition": "licensed",
@@ -1445,7 +1445,7 @@ FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免�
 }
 ```
 
-**响应示例** (免费版):
+**Response example** (free edition):
 ```json
 {
   "edition": "free",
@@ -1464,12 +1464,12 @@ FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免�
 
 ### `license/set`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `license_key` | `string` | ✅ | 授权码，格式 `FG-XXXX-XXXX-XXXX` |
-| `product` | `string` | ❌ | 产品标识，默认使用配置文件中的值 |
+| Parameter | Type | Required | Description |
+|--------|------|----------|-------------|
+| `license_key` | `string` | ✅ | License key, format `FG-XXXX-XXXX-XXXX` |
+| `product` | `string` | ❌ | Product identifier; by default the value from the configuration file is used |
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "edition": "licensed",
@@ -1479,11 +1479,11 @@ FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免�
 }
 ```
 
-> 授权码绑定设备，一码一机，激活后不可转移。
+> The license key is bound to a device: one key per machine, and it cannot be transferred after activation.
 
 ### `license/clear`
 
-**响应示例**:
+**Response example**:
 ```json
 {
   "edition": "free",
@@ -1494,13 +1494,13 @@ FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免�
 
 ---
 
-## 20. 网关信息
+## 20. Gateway Information
 
 ### `gateway/info`
 
-获取虚拟网关信息，包括版本、平台、设备 ID、授权状态。
+Get virtual gateway information, including version, platforms, device ID, and license status.
 
-**参数**: 无
+**Parameters**: none
 
 ```bash
 curl -s -X POST http://localhost:38080/mcp/http \
@@ -1510,33 +1510,33 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ---
 
-## 21. 错误码
+## 21. Error Codes
 
-### JSON-RPC 协议错误
+### JSON-RPC Protocol Errors
 
-| 错误码 | 含义 |
-|--------|------|
-| `-32700` | 解析错误（Invalid JSON） |
-| `-32600` | 非法请求（非 JSON-RPC 2.0） |
-| `-32601` | 方法不存在 |
-| `-32602` | 参数错误（缺少 `params.name` 或工具不存在） |
-| `-32603` | 服务器内部错误 |
+| Error Code | Meaning |
+|------------|---------|
+| `-32700` | Parse error (Invalid JSON) |
+| `-32600` | Invalid request (not JSON-RPC 2.0) |
+| `-32601` | Method not found |
+| `-32602` | Invalid params (missing `params.name` or the tool does not exist) |
+| `-32603` | Internal server error |
 
-### 工具业务错误
+### Tool Business Errors
 
-工具返回的 JSON 中可能包含以下错误：
+The JSON returned by a tool may contain the following errors:
 
-| 字段 | 说明 |
-|------|------|
-| `{"error": "..."}` | 通用业务错误 |
-| `{"success": false, "error": "license_required"}` | 需要设备授权（涂鸦/美的/易微联设置操作） |
-| `{"error": "当前平台不支持摄像头功能"}` | Windows 平台不支持摄像头 |
+| Field | Description |
+|-------|-------------|
+| `{"error": "..."}` | Generic business error |
+| `{"success": false, "error": "license_required"}` | A device license is required (set operations on 涂鸦 (Tuya) / 美的 (Midea) / 易微联 (eWeLink) devices) |
+| `{"error": "当前平台不支持摄像头功能"}` | The camera feature is not supported on the Windows platform |
 
 ---
 
-## 附录: 快速示例
+## Appendix: Quick Examples
 
-### 查找并控制客厅灯
+### Find and Control the Living Room Light
 
 ```bash
 # 1. 查找设备
@@ -1555,7 +1555,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"set_xiaomi_device_property","arguments":{"deviceId":"YOUR_DID","siid":2,"piid":1,"value":true}}}'
 ```
 
-### 检查各平台授权状态
+### Check the Authorization Status of Each Platform
 
 ```bash
 curl -s -X POST http://localhost:38080/mcp/http \
@@ -1563,7 +1563,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/platforms","arguments":{}}}'
 ```
 
-### 创建触发规则（有人进门开灯）
+### Create a Trigger Rule (Turn the Light On When Someone Enters)
 
 ```json
 {
