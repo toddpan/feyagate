@@ -1,0 +1,66 @@
+{
+  "name": "feyagate",
+  "version": "2.0.0",
+  "description": "FeyaGate smart-home skill + MCP server for AI agents (Claude Code, Cursor, Codex, DSH…): control Xiaomi, Tuya, Midea, eWeLink and Huawei devices. Installs and upgrades a verified local engine.",
+  "type": "module",
+  "bin": {
+    "feyagate": "bin/feyagate.js"
+  },
+  "main": "./lib/cli.js",
+  "files": [
+    "bin",
+    "lib/**/*.js",
+    "manifest",
+    "skill",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.16.0"
+  },
+  "scripts": {
+    "build": "rm -rf lib && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "manifest": "node scripts/gen-manifest.mjs",
+    "pack:skill": "node scripts/pack-skill.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "mcp",
+    "smart-home",
+    "skill",
+    "agent-skill",
+    "claude-code",
+    "cursor",
+    "codex",
+    "xiaomi",
+    "tuya",
+    "midea",
+    "ewelink",
+    "huawei",
+    "feyagate"
+  ],
+  "author": "panzuji <598432467@qq.com>",
+  "license": "MIT",
+  "homepage": "https://www.feyagate.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toddpan/feyagate.git"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4",
+    "tar": "7.5.22",
+    "yaml": "2.9.1",
+    "yauzl": "3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.0",
+    "@types/qrcode": "1.5.6",
+    "@types/yauzl": "3.4.0",
+    "typescript": "5.9.3"
+  },
+  "bugs": {
+    "url": "https://github.com/toddpan/feyagate/issues"
+  }
+}
